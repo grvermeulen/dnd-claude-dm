@@ -179,6 +179,7 @@ let S = {
   joinError: '',
   streaming: false,
   streamText: '',
+  showVoices: false,       // in-game stemkiezer open/dicht
 };
 
 // ── DM Stemmen ────────────────────────────────────────────────────────────────
@@ -317,18 +318,28 @@ function speakFallback(text) {
   window.speechSynthesis.speak(utt);
 }
 
-// Voorlezen van de volledige tekst (geen afkapping)
+// Voorlezen van de volledige tekst (geen afkapping).
+// _speakSeq voorkomt dubbel afspelen: alleen de nieuwste aanvraag speelt af.
+let _speakSeq = 0;
 async function speak(text) {
   stopAudio();
   if (!text) return;
   const clean = text.replace(/```[\s\S]*?```/g,'').replace(/[*_#`\[\]]/g,'').trim();
   if (!clean) return;
+  const seq = ++_speakSeq;
   const bufs = await fetchTTS(clean);
-  if (!(bufs && await playBuffers(bufs))) speakFallback(clean);
+  if (seq !== _speakSeq) return;            // door een nieuwere speak() ingehaald → afbreken
+  if (!(bufs && await playBuffers(bufs))) { if (seq === _speakSeq) speakFallback(clean); }
 }
 
 // Manuele "Voorlees" knop
 function speakNow() { speak(S.lastStory); }
+
+// Wissel de DM-stem tijdens het spel (gedeeld met alle spelers via de sessie)
+async function changeVoice(id) {
+  set({ voiceId: id, showVoices: false });
+  if (S.sessionCode) { try { await dbUpdate({ voice_id: id }); } catch(e){} }
+}
 
 // ── Audio unlock via directe tap ─────────────────────────────────────────────
 function unlockThenStart() {
@@ -409,7 +420,9 @@ const INIT = n => `Start een klassiek fantasy D&D avontuur voor ${n} speler(s)! 
 
 const SYSTEM_NL = `Je bent een meeslepende Dungeon Master voor een klassiek fantasy D&D avontuur. Spreek ALTIJD in het Nederlands. Gebruik een vereenvoudigd systeem zonder spell slots.
 - Levendige maar beknopte beschrijvingen (3-5 zinnen per beurt).
+- Genereer en beheer ALLE personages volledig zelf bij de start (naam, klasse, ras, stats). Vraag spelers NOOIT om hun naam, klasse of ras op te geven.
 - Meerdere spelers kunnen meedoen. Een spelersbericht kan beginnen met de naam van het handelende personage tussen haken, bv. "[Thorin] valt de ork aan". Richt je antwoord op het juiste personage.
+- Geef in ELKE reactie ALTIJD het volledige JSON-blok met ALLE personages terug (ook de personages die deze beurt niet handelden); laat er nooit één weg.
 - Na ELKE reactie een JSON-blok met alle karakters:
 \`\`\`json
 [{"name":"Naam","class":"Klasse","hp":25,"maxHp":25,"ac":14,"gold":10,"xp":0,"level":1,"str":12,"dex":14,"con":12,"int":10,"wis":10,"cha":10,"inventory":["item"],"status":"alive"}]
@@ -478,8 +491,10 @@ function applyRow(row, allowAudio) {
   _syncedStory = row.last_story || _syncedStory;
   set({
     story: row.story || '',
+    messages: row.messages || S.messages,   // sync conversatie-historie (anders verliest de DM context)
     characters: row.characters || [],
     players: row.players || [],
+    voiceId: row.voice_id || S.voiceId,      // gedeelde DM-stem, live bij te werken
     loading: !!row.loading,
     lastStory: row.last_story || S.lastStory,
     diceResult: row.dice ? { die: row.dice.die, value: row.dice.value } : S.diceResult,
@@ -779,10 +794,26 @@ function draw() {
           ${S.speaking
             ?`<button class="tbtn stop" onclick="stopAudio()">■ Stop</button>`
             :(S.lastStory)?`<button class="tbtn" style="background:rgba(40,100,40,.2);border:1px solid rgba(80,160,40,.4);color:#90ee90" onclick="speakNow()">▶ Voorlees</button>`:''}
+          <button class="tbtn mute" onclick="set({showVoices:!S.showVoices})">🎙 Stem</button>
           <button class="tbtn mute" onclick="set({ttsOn:!S.ttsOn});stopAudio()">${S.ttsOn?'Uit':'Aan'}</button>
         </div>
       </div>
     </div>
+
+    <!-- Stemkiezer (tijdens spel) -->
+    ${S.showVoices?`
+    <div class="panel">
+      <div class="phdr"><span>🎙 Stem van de DM</span><span style="opacity:.7;cursor:pointer" onclick="set({showVoices:false})">✕ sluit</span></div>
+      <div class="voice-grid">
+        ${DM_VOICES.map(v=>`
+          <div class="vc${S.voiceId===v.id?' sel':''}" onclick="changeVoice('${v.id}')">
+            <div class="vflag">${v.flag}</div>
+            <div class="vname">${v.name}</div>
+            <div class="vdesc">${v.desc}</div>
+            <div class="vprev" onclick="event.stopPropagation();previewVoice('${v.id}','${v.preview.replace(/'/g,"\\'")}')">▶ Preview</div>
+          </div>`).join('')}
+      </div>
+    </div>`:''}
 
     <!-- Karakters -->
     ${S.characters.length?`

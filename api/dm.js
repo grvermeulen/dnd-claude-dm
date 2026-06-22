@@ -14,7 +14,9 @@ export default async function handler(req) {
 
   const DEFAULT_SYSTEM = `Je bent een meeslepende Dungeon Master voor een klassiek fantasy D&D avontuur. Spreek ALTIJD in het Nederlands. Gebruik een vereenvoudigd systeem zonder spell slots.
 - Levendige maar beknopte beschrijvingen (3-5 zinnen per beurt).
+- Genereer en beheer ALLE personages volledig zelf bij de start (naam, klasse, ras, stats). Vraag spelers NOOIT om hun naam, klasse of ras op te geven.
 - Meerdere spelers kunnen meedoen. Een spelersbericht kan beginnen met de naam van het handelende personage tussen haken, bv. "[Thorin] valt de ork aan". Richt je antwoord op het juiste personage.
+- Geef in ELKE reactie ALTIJD het volledige JSON-blok met ALLE ${playerCount} personages terug (ook wie deze beurt niet handelde); laat er nooit één weg.
 - Na ELKE reactie een JSON-blok met alle ${playerCount} karakters:
 \`\`\`json
 [{"name":"Naam","class":"Klasse","hp":25,"maxHp":25,"ac":14,"gold":10,"xp":0,"level":1,"str":12,"dex":14,"con":12,"int":10,"wis":10,"cha":10,"inventory":["item"],"status":"alive"}]
