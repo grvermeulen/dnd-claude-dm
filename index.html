@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+<title>Claude DM</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Lora:ital,wght@0,400;1,400&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--ink:#1e1006;--ink2:#4a2c10;--gold:#c8922a;--gold2:#e8b84b;--blood:#7a1515;--bg:#100800;--panel:rgba(242,228,184,0.97);--glow:rgba(200,146,42,0.5)}
+body{background:var(--bg);font-family:'Lora',serif;color:var(--ink);min-height:100vh}
+.app{min-height:100vh;background:radial-gradient(ellipse 80% 60% at 50% 0%,rgba(139,50,10,.15),transparent),var(--bg);display:flex;flex-direction:column;align-items:center;padding-bottom:48px}
+.hdr{width:100%;max-width:500px;padding:16px;text-align:center;border-bottom:1px solid rgba(200,146,42,.4)}
+.hdr h1{font-family:'Cinzel',serif;font-size:22px;font-weight:900;color:var(--gold2);letter-spacing:4px;text-transform:uppercase;text-shadow:0 0 20px var(--glow)}
+.hdr p{font-size:9px;letter-spacing:3px;text-transform:uppercase;color:rgba(230,208,154,.5);margin-top:2px}
+.orn{color:var(--gold);margin:0 8px;opacity:.7}
+.wrap{width:calc(100% - 24px);max-width:500px;margin-top:20px;display:flex;flex-direction:column;gap:12px}
+.card{background:var(--panel);border:1px solid var(--gold);border-radius:6px;padding:24px 20px;text-align:center;box-shadow:0 6px 30px rgba(0,0,0,.6)}
+.card .icon{font-size:44px;margin-bottom:12px}
+.card h2{font-family:'Cinzel',serif;font-size:15px;font-weight:700;letter-spacing:2px;margin-bottom:8px}
+.card p{font-size:11px;color:var(--ink2);line-height:1.7;margin-bottom:20px;font-style:italic}
+.btn{flex:1;padding:13px;border-radius:4px;font-family:'Cinzel',serif;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;cursor:pointer;transition:all .2s;border:1px solid}
+.bp{background:linear-gradient(135deg,#8b1a1a,#a52020,#7a1515);border-color:rgba(200,146,42,.5);color:var(--gold2);box-shadow:0 4px 14px rgba(139,26,26,.5)}
+.bp:hover:not(:disabled){transform:translateY(-1px);filter:brightness(1.1)}
+.bp:disabled{opacity:.4;cursor:not-allowed;transform:none!important}
+.bs{background:rgba(200,146,42,.1);border-color:rgba(200,146,42,.4);color:var(--ink)}
+.sel-lbl{font-family:'Cinzel',serif;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--ink2);margin-bottom:8px}
+.sel-row{display:flex;gap:6px;justify-content:center;margin-bottom:20px;flex-wrap:wrap}
+.sn{width:44px;height:44px;border-radius:4px;border:2px solid rgba(200,146,42,.4);background:rgba(200,146,42,.08);color:var(--ink);font-family:'Cinzel',serif;font-size:16px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s}
+.sn:hover{border-color:var(--gold)}
+.sn.on{border-color:var(--gold2);background:rgba(200,146,42,.3);color:var(--blood);box-shadow:0 0 10px var(--glow)}
+.panel{background:var(--panel);border:1px solid var(--gold);border-radius:6px;box-shadow:0 4px 20px rgba(0,0,0,.6);overflow:hidden}
+.phdr{padding:7px 14px;background:rgba(200,146,42,.07);border-bottom:1px solid rgba(200,146,42,.2);font-family:'Cinzel',serif;font-size:9px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--ink2)}
+.story{padding:14px;min-height:140px;max-height:240px;overflow-y:auto;font-size:13px;line-height:1.85;color:var(--ink)}
+.story p{margin-bottom:10px}.story p:last-child{margin-bottom:0}
+.empty{height:100px;display:flex;align-items:center;justify-content:center;font-style:italic;opacity:.5;font-size:12px;text-align:center}
+.dots{display:inline-flex;gap:5px;padding:6px 0}
+.dots span{width:7px;height:7px;background:var(--gold);border-radius:50%;animation:dot 1.2s infinite}
+.dots span:nth-child(2){animation-delay:.2s}.dots span:nth-child(3){animation-delay:.4s}
+@keyframes dot{0%,60%,100%{transform:translateY(0);opacity:.3}30%{transform:translateY(-6px);opacity:1}}
+.tts-bar{display:flex;align-items:center;justify-content:space-between;padding:6px 12px;background:rgba(200,146,42,.06);border-top:1px solid rgba(200,146,42,.15)}
+.tts-on{display:flex;align-items:center;gap:5px;font-family:'Cinzel',serif;font-size:9px;letter-spacing:1px;color:var(--gold2)}
+.waves{display:flex;align-items:center;gap:2px}
+.waves span{width:3px;border-radius:2px;background:var(--gold2);animation:wv .8s ease-in-out infinite}
+.waves span:nth-child(1){height:8px}.waves span:nth-child(2){height:14px;animation-delay:.1s}.waves span:nth-child(3){height:10px;animation-delay:.2s}.waves span:nth-child(4){height:16px;animation-delay:.15s}.waves span:nth-child(5){height:8px;animation-delay:.05s}
+@keyframes wv{0%,100%{transform:scaleY(.4);opacity:.5}50%{transform:scaleY(1);opacity:1}}
+.tts-btns{display:flex;gap:6px}
+.tbtn{border-radius:3px;padding:3px 8px;font-size:8px;font-family:'Cinzel',serif;letter-spacing:1px;text-transform:uppercase;cursor:pointer}
+.tbtn.mute{background:transparent;border:1px solid rgba(200,146,42,.3);color:rgba(230,208,154,.7)}
+.tbtn.stop{background:rgba(122,21,21,.2);border:1px solid rgba(122,21,21,.4);color:#e57373}
+.chars{display:grid;gap:8px;padding:10px}
+.g1{grid-template-columns:1fr}.g2{grid-template-columns:1fr 1fr}.g3{grid-template-columns:1fr 1fr 1fr}
+.cc{background:rgba(255,255,255,.18);border:1px solid rgba(200,146,42,.3);border-radius:4px;padding:8px;position:relative}
+.cc.dead{opacity:.4;filter:grayscale(.6)}
+.ccn{font-family:'Cinzel',serif;font-size:10px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:1px}
+.ccc{font-size:8px;color:var(--ink2);font-style:italic;margin-bottom:5px}
+.hpb{height:3px;background:rgba(122,21,21,.15);border-radius:2px;margin-bottom:5px;overflow:hidden}
+.hpf{height:100%;border-radius:2px;transition:width .5s}
+.stats{display:flex;gap:3px;flex-wrap:wrap;margin-bottom:4px}
+.badge{font-family:'Cinzel',serif;font-size:8px;padding:1px 4px;border-radius:2px;border:1px solid rgba(200,146,42,.3);background:rgba(200,146,42,.1);white-space:nowrap}
+.badge.h{border-color:rgba(122,21,21,.4);background:rgba(122,21,21,.1)}
+.badge.g{border-color:rgba(200,146,42,.5);background:rgba(200,146,42,.2)}
+.badge.x{border-color:rgba(40,100,40,.4);background:rgba(40,100,40,.1)}
+.invl{font-size:7px;letter-spacing:1px;text-transform:uppercase;color:var(--ink2);opacity:.6;margin-bottom:1px}
+.inv{font-size:8px;font-style:italic;line-height:1.5}
+.spip{position:absolute;top:5px;right:5px;font-size:7px;padding:1px 3px;border-radius:2px;font-family:'Cinzel',serif}
+.sa{background:rgba(40,100,40,.15);color:#2a6a2a;border:1px solid rgba(40,100,40,.3)}
+.su{background:rgba(139,100,20,.15);color:#8b6414;border:1px solid rgba(139,100,20,.3)}
+.sd{background:rgba(122,21,21,.15);color:var(--blood);border:1px solid rgba(122,21,21,.3)}
+
+/* TRANSCRIPT BOX */
+.tx-box{background:rgba(0,0,0,.45);border:1px solid rgba(200,146,42,.3);border-radius:6px;padding:10px 14px;display:flex;flex-direction:column;gap:8px}
+.tx-label{font-family:'Cinzel',serif;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--gold);opacity:.7}
+.tx-text{font-size:14px;color:rgba(242,228,184,.95);line-height:1.6;min-height:24px;font-style:italic}
+.tx-btns{display:flex;gap:8px}
+.tx-btn{flex:1;padding:10px;border-radius:4px;font-family:'Cinzel',serif;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;cursor:pointer;border:1px solid}
+.tx-send{background:linear-gradient(135deg,#2a5a1a,#3a7a22,#1a4a12);border-color:rgba(80,160,40,.5);color:#90ee90}
+.tx-redo{background:rgba(200,146,42,.1);border-color:rgba(200,146,42,.4);color:var(--ink)}
+
+/* DICE */
+.dice-panel{background:var(--panel);border:1px solid var(--gold);border-radius:6px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,.6)}
+.dice-row{display:flex;gap:8px;padding:10px;flex-wrap:wrap;justify-content:center}
+.die{width:52px;height:52px;border-radius:6px;border:2px solid rgba(200,146,42,.4);background:linear-gradient(135deg,#3a1f08,#1a0f05);color:var(--gold2);font-family:'Cinzel',serif;font-size:11px;font-weight:700;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;transition:all .15s;-webkit-tap-highlight-color:transparent}
+.die:hover{border-color:var(--gold);transform:scale(1.05)}
+.die:active{transform:scale(.95)}
+.die .de{font-size:18px;line-height:1}
+.dice-result{padding:10px 14px;text-align:center;min-height:48px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;border-top:1px solid rgba(200,146,42,.15)}
+.dice-num{font-family:'Cinzel',serif;font-size:32px;font-weight:900;color:var(--blood);text-shadow:0 2px 8px rgba(122,21,21,.4);animation:pop .3s ease}
+@keyframes pop{0%{transform:scale(1.4);opacity:.5}100%{transform:scale(1);opacity:1}}
+.dice-desc{font-size:10px;color:var(--ink2);font-style:italic}
+
+/* PTT */
+.ptt-wrap{display:flex;flex-direction:column;align-items:center;gap:8px}
+.ptt{width:90px;height:90px;border-radius:50%;border:3px solid var(--gold);background:radial-gradient(circle at 38% 38%,#2a1205,#100800);color:var(--gold2);font-family:'Cinzel',serif;font-size:9px;font-weight:700;letter-spacing:1px;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;box-shadow:0 6px 24px rgba(0,0,0,.7);transition:all .15s;-webkit-tap-highlight-color:transparent;user-select:none;touch-action:none}
+.ptt.on{background:radial-gradient(circle at 38% 38%,#4a1e06,#1e0e02);border-color:var(--gold2);box-shadow:0 3px 12px rgba(0,0,0,.7),0 0 24px var(--glow);transform:scale(.95)}
+.ptt:disabled{opacity:.35;cursor:not-allowed}
+.ptt .pi{font-size:26px;line-height:1}
+.err{background:rgba(122,21,21,.15);border:1px solid rgba(122,21,21,.4);border-radius:4px;padding:10px;font-size:11px;color:#e57373;text-align:center}
+.reset{background:transparent;border:1px solid rgba(200,146,42,.2);border-radius:3px;padding:6px 16px;color:rgba(230,208,154,.5);font-size:9px;font-family:'Cinzel',serif;letter-spacing:2px;text-transform:uppercase;cursor:pointer;margin-top:4px}
+::-webkit-scrollbar{width:4px}::-webkit-scrollbar-thumb{background:var(--gold);border-radius:2px}
+.voice-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:10px}
+.vc{background:rgba(255,255,255,.15);border:2px solid rgba(200,146,42,.3);border-radius:5px;padding:10px 8px;cursor:pointer;text-align:center;transition:all .15s;-webkit-tap-highlight-color:transparent}
+.vc:active{transform:scale(.97)}
+.vc.sel{border-color:var(--gold2);background:rgba(200,146,42,.25);box-shadow:0 0 10px var(--glow)}
+.vc .vflag{font-size:22px;margin-bottom:4px}
+.vc .vname{font-family:'Cinzel',serif;font-size:11px;font-weight:700;color:var(--ink)}
+.vc .vdesc{font-size:9px;color:var(--ink2);font-style:italic;margin-top:2px}
+.vc .vprev{font-size:8px;color:var(--blood);font-family:'Cinzel',serif;letter-spacing:1px;margin-top:4px;cursor:pointer}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="hdr">
+    <h1><span class="orn">⚔</span>Claude DM<span class="orn">⚔</span></h1>
+    <p>Dungeon Master · Klassiek Fantasy</p>
+  </div>
+  <div id="root"></div>
+</div>
+<script>
+// ── State ─────────────────────────────────────────────────────────────────────
+let S = {
+  screen: 'setup',
+  audioUnlocked: false,
+  numPlayers: 4,
+  story: '',
+  messages: [],
+  characters: [],
+  loading: false,
+  listening: false,
+  transcript: '',
+  pendingAction: '',   // tekst klaar om te versturen
+  speaking: false,
+  ttsOn: true,
+  error: '',
+  diceResult: null,    // { die, value }
+  diceRolling: false,
+  debugLog: [],
+  lastStory: '',
+  pendingBuf: null,
+  voiceId: 'JBFqnCBsd6RMkjVDRZzb',
+  showVoices: false
+};
+
+// ── DM Stemmen ────────────────────────────────────────────────────────────────
+const DM_VOICES = [
+  { id: 'JBFqnCBsd6RMkjVDRZzb', name: 'George',   desc: 'Warm verteller',        flag: '🇬🇧', preview: 'A wise and captivating storyteller guides you through ancient halls.' },
+  { id: 'nPczCjzI2devNBz1zQrb', name: 'Brian',    desc: 'Diep & geruststellend',  flag: '🇺🇸', preview: 'Deep in the dungeon, shadows stir and danger lurks around every corner.' },
+  { id: 'onwK4e9ZLuTAKqWW03F9', name: 'Daniel',   desc: 'Stabiele omroeper',      flag: '🇬🇧', preview: 'The dragon rises from its slumber, its eyes gleaming with ancient fury.' },
+  { id: 'pqHfZKP75CvOlQylNhV4', name: 'Bill',     desc: 'Wijs & volwassen',       flag: '🇺🇸', preview: 'Long ago, in a realm forgotten by time, a great evil was awakened.' },
+  { id: 'pNInz6obpgDQGcFmaJgB', name: 'Adam',     desc: 'Dominant & vastberaden', flag: '🇺🇸', preview: 'Stand your ground, adventurer. This foe will not pass without a fight.' },
+  { id: 'SOYHLrjzK2X1ezoPC6cr', name: 'Harry',    desc: 'Fel & krijgshaftig',     flag: '🇺🇸', preview: 'Steel clashes against steel as the battle for the kingdom begins!' },
+  { id: 'N2lVS1w4EtoT3dr4eOWO', name: 'Callum',   desc: 'Hees & mysterieus',      flag: '🇺🇸', preview: 'Something ancient stirs in the darkness... you sense you are not alone.' },
+  { id: 'Tj9l48J9AJbry5yCP5eW', name: 'Nosferatu', desc: 'Duister vampier',       flag: '🧛', preview: 'The crypt opens before you. Inside, eternal darkness and forgotten secrets.' },
+  { id: 'zYcjlYFOd3taleS0gkk3', name: 'Inferno',  desc: 'Arrogante schurk',       flag: '😈', preview: 'Did you really think you could challenge me? How delightfully foolish.' },
+  { id: 'hmMWXCj9K7N5mCPcRkfC', name: 'Rory',     desc: 'Ierse avonturier',       flag: '🍀', preview: 'Ah, gather round friends! Have I got a tale for ye this fine evening.' },
+];
+
+function set(p) { S={...S,...p}; draw(); }
+function dlog(msg) { const t=new Date().toLocaleTimeString('nl',{hour12:false}); set({debugLog:[...(S.debugLog||[]).slice(-8), t+' '+msg]}); console.log(msg); }
+
+// ── TTS via ElevenLabs + AudioContext (iOS compatibel) ──────────────────────
+let _actx = null;
+let _sourceNode = null;
+
+function getCtx() {
+  if (!_actx) _actx = new (window.AudioContext||window.webkitAudioContext)();
+  if (_actx.state === 'suspended') _actx.resume();
+  return _actx;
+}
+
+// Direct vanuit tap — AudioContext resume werkt hier gegarandeerd
+async function previewVoice(voiceId, text) {
+  stopAudio();
+  set({ voiceId });
+  try {
+    const ctx = getCtx();
+    await ctx.resume();
+    const r = await fetch('/api/tts', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ text, voiceId })
+    });
+    if (!r.ok) return;
+    const buf = await r.arrayBuffer();
+    const decoded = await ctx.decodeAudioData(buf);
+    if (_sourceNode) { try{_sourceNode.stop();}catch(e){} }
+    const src = ctx.createBufferSource();
+    src.buffer = decoded;
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(1.0, ctx.currentTime);
+    src.connect(gain);
+    gain.connect(ctx.destination);
+    src.onended = () => { _sourceNode=null; };
+    _sourceNode = src;
+    src.start(0);
+  } catch(e) { console.error('preview:', e); }
+}
+
+async function speakNow() {
+  stopAudio();
+  try {
+    const ctx = getCtx();
+    await ctx.resume();
+    dlog('CTX: '+ctx.state);
+
+    // Gebruik pre-opgehaalde buffer als beschikbaar
+    let buf = S.pendingBuf;
+    if (!buf && S.lastStory) {
+      dlog('Ophalen...');
+      set({ speaking: true });
+      const clean = S.lastStory.replace(/```[\s\S]*?```/g,'').replace(/[*_#`\[\]]/g,'').trim();
+      const r = await fetch('/api/tts', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ text: clean.slice(0,800), voiceId: S.voiceId })
+      });
+      if (!r.ok) { set({speaking:false}); return; }
+      buf = await r.arrayBuffer();
+    }
+    if (!buf) { dlog('Geen audio'); return; }
+
+    // buf kan een array zijn (meerdere chunks) of een enkel buffer
+    const bufArray = Array.isArray(buf) ? buf : [buf];
+    dlog('Afspelen: ' + bufArray.length + ' delen');
+    set({ speaking: true, pendingBuf: null });
+    
+    // Decodeer alle delen
+    const decodedParts = await Promise.all(
+      bufArray.map(b => ctx.decodeAudioData(b.slice ? b.slice(0) : b))
+    );
+    
+    // Speel achter elkaar af
+    let startTime = ctx.currentTime;
+    for (let i = 0; i < decodedParts.length; i++) {
+      const dec = decodedParts[i];
+      const src = ctx.createBufferSource();
+      src.buffer = dec;
+      const gain = ctx.createGain();
+      gain.gain.setValueAtTime(1.0, ctx.currentTime);
+      src.connect(gain);
+      gain.connect(ctx.destination);
+      if (i === decodedParts.length - 1) {
+        src.onended = () => { _sourceNode=null; set({speaking:false}); };
+      }
+      src.start(startTime);
+      startTime += dec.duration;
+      if (i === 0) _sourceNode = src;
+    }
+    dlog('Speelt! totaal ' + decodedParts.reduce((s,d)=>s+d.duration,0).toFixed(1) + 's');
+  } catch(e) {
+    dlog('Fout: '+e.message);
+    set({speaking:false});
+    if (S.lastStory) speakFallback(S.lastStory);
+  }
+}
+
+function stopAudio() {
+  if (_sourceNode) { try { _sourceNode.stop(); } catch(e){} _sourceNode = null; }
+  window.speechSynthesis?.cancel();
+  set({ speaking: false });
+}
+
+// Haalt audio op als ArrayBuffer (parallel met DM response)
+// Splits tekst in zinnen, max 4500 tekens per chunk
+function splitText(text) {
+  const clean = text.replace(/```[\s\S]*?```/g,'').replace(/[*_#`\[\]]/g,'').trim();
+  if (clean.length <= 4500) return [clean];
+  const chunks = [];
+  let current = '';
+  const sentences = clean.match(/[^.!?]+[.!?]+|[^.!?]+$/g) || [clean];
+  for (const s of sentences) {
+    if ((current + s).length > 4500 && current) {
+      chunks.push(current.trim());
+      current = s;
+    } else {
+      current += s;
+    }
+  }
+  if (current.trim()) chunks.push(current.trim());
+  return chunks;
+}
+
+async function fetchTTS(text) {
+  const chunks = splitText(text);
+  dlog('TTS ' + chunks.length + ' deel/delen, ' + text.length + ' tekens');
+  try {
+    // Haal alle chunks parallel op
+    const bufs = await Promise.all(chunks.map(async chunk => {
+      const r = await fetch('/api/tts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: chunk, voiceId: S.voiceId })
+      });
+      if (!r.ok) {
+        const err = await r.text().catch(()=>'');
+        dlog('Chunk fout ' + r.status + ': ' + err.slice(0,60));
+        return null;
+      }
+      return await r.arrayBuffer();
+    }));
+    const valid = bufs.filter(Boolean);
+    if (!valid.length) return null;
+    dlog('TTS klaar: ' + valid.length + ' delen');
+    return valid; // Geef array terug, niet gecombineerd
+  } catch(e) { dlog('TTS fout: ' + e.message); return null; }
+}
+
+// Speelt een al-opgehaalde ArrayBuffer af via AudioContext
+async function playBuffer(buf) {
+  if (!buf) { console.log('playBuffer: geen buf'); return; }
+  try {
+    const ctx = getCtx();
+    dlog('CTX: '+ctx.state+' buf:'+buf.byteLength);
+    const decoded = await ctx.decodeAudioData(buf.slice(0));
+    dlog('Decoded: '+decoded.duration.toFixed(1)+'s');
+    if (_sourceNode) { try{_sourceNode.stop();}catch(e){} }
+    const src = ctx.createBufferSource();
+    src.buffer = decoded;
+    src.connect(ctx.destination);
+    src.onended = () => { _sourceNode = null; set({ speaking: false }); };
+    _sourceNode = src;
+    set({ speaking: true });
+    src.start(0);
+    dlog('Speelt!');
+  } catch(e) {
+    dlog('PLAY FOUT: '+e.name+' '+e.message);
+    set({ speaking: false, error: 'Audio: ' + e.message });
+  }
+}
+
+function speakFallback(text) {
+  window.speechSynthesis.cancel();
+  if (!text) return;
+  const utt = new SpeechSynthesisUtterance(text.slice(0,900));
+  utt.lang = 'en-GB'; utt.rate = 0.82; utt.pitch = 0.78;
+  const voices = window.speechSynthesis.getVoices();
+  const v = voices.find(v => /daniel|george|arthur|david/i.test(v.name) && /en/i.test(v.lang));
+  if (v) utt.voice = v;
+  utt.onstart = () => set({ speaking: true });
+  utt.onend = () => set({ speaking: false });
+  window.speechSynthesis.speak(utt);
+}
+
+async function speak(text) {
+  stopAudio();
+  if (!S.ttsOn || !S.audioUnlocked) return;
+  const clean = text.replace(/```[\s\S]*?```/g,'').replace(/[*_#`\[\]]/g,'').trim();
+  if (!clean) return;
+  const buf = await fetchTTS(clean);
+  if (buf) {
+    await playBuffer(buf);
+  } else {
+    speakFallback(clean);
+  }
+}
+
+// ── Audio unlock via directe tap ─────────────────────────────────────────────
+function unlockThenStart() {
+  // Spreek een korte stille zin — dit geeft iOS toestemming voor de hele sessie
+  const utt = new SpeechSynthesisUtterance(' ');
+  utt.volume = 0.01;
+  utt.onend = () => {
+    set({ audioUnlocked: true, screen: 'setup' });
+  };
+  utt.onerror = () => {
+    // Toch doorgaan, misschien werkt het alsnog
+    set({ audioUnlocked: true, screen: 'setup' });
+  };
+  window.speechSynthesis.speak(utt);
+}
+
+// ── Dobbelstenen ──────────────────────────────────────────────────────────────
+const DICE = [4,6,8,10,12,20,100];
+
+function rollDie(sides) {
+  
+  set({ diceRolling: true, diceResult: null });
+  // Dobbelsteengeluid via AudioContext
+  playDiceSound();
+  setTimeout(() => {
+    const val = Math.floor(Math.random() * sides) + 1;
+    set({ diceRolling: false, diceResult: { die: sides, value: val } });
+  }, 600);
+}
+
+function playDiceSound() {
+  try {
+    const ctx = getAudioCtx();
+    // Rattle geluid: meerdere korte klikken
+    for (let i = 0; i < 6; i++) {
+      const t = ctx.currentTime + i * 0.08;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.frequency.value = 200 + Math.random() * 400;
+      osc.type = 'square';
+      gain.gain.setValueAtTime(0.15, t);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.05);
+      osc.start(t); osc.stop(t + 0.05);
+    }
+    // Slotklap
+    const t2 = ctx.currentTime + 0.55;
+    const osc2 = ctx.createOscillator();
+    const g2 = ctx.createGain();
+    osc2.connect(g2); g2.connect(ctx.destination);
+    osc2.frequency.value = 150;
+    osc2.type = 'triangle';
+    g2.gain.setValueAtTime(0.3, t2);
+    g2.gain.exponentialRampToValueAtTime(0.001, t2+0.15);
+    osc2.start(t2); osc2.stop(t2+0.15);
+  } catch(e) {}
+}
+
+// ── Spraakherkenning ──────────────────────────────────────────────────────────
+let _rec = null;
+
+function startListen() {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) { set({error:'Spraak niet ondersteund in deze browser'}); return; }
+  _rec = new SR();
+  _rec.lang = 'nl-NL';
+  _rec.interimResults = true;
+  _rec.continuous = false;
+  _rec.onresult = e => {
+    const txt = Array.from(e.results).map(r=>r[0].transcript).join('');
+    set({ transcript: txt });
+  };
+  _rec.onend = () => {
+    const final = S.transcript;
+    set({ listening: false, pendingAction: final });
+  };
+  _rec.onerror = e => {
+    set({ listening: false, error: 'Mic fout: ' + e.error });
+  };
+  try { _rec.start(); set({ listening: true, transcript: '', pendingAction: '' }); }
+  catch(e) { set({ error: 'Mic: ' + e.message }); }
+}
+
+function stopListen() {
+  if (_rec) { try{_rec.stop();}catch(e){} _rec=null; }
+  set({ listening: false });
+}
+
+// ── Claude DM ─────────────────────────────────────────────────────────────────
+const INIT = n => `Start een klassiek fantasy D&D avontuur voor ${n} speler(s)! Spreek ALTIJD Nederlands. Genereer ${n} unieke karakters (gevarieerde klassen/rassen). Beschrijf de openingsscène levendig. Geef de eerste haak of ontmoeting. Voeg volledige JSON toe voor alle ${n} karakters.`;
+
+const SYSTEM_NL = `Je bent een meeslepende Dungeon Master voor een klassiek fantasy D&D avontuur. Spreek ALTIJD in het Nederlands. Gebruik een vereenvoudigd systeem zonder spell slots.
+- Levendige maar beknopte beschrijvingen (3-5 zinnen per beurt).
+- Na ELKE reactie een JSON-blok met alle karakters:
+\`\`\`json
+[{"name":"Naam","class":"Klasse","hp":25,"maxHp":25,"ac":14,"gold":10,"xp":0,"level":1,"str":12,"dex":14,"con":12,"int":10,"wis":10,"cha":10,"inventory":["item"],"status":"alive"}]
+\`\`\`
+- status: alive|unconscious|dead. Behoud narratieve continuïteit. Spreek de spelers direct aan.`;
+
+function parseChars(txt) {
+  try { const m=txt.match(/```json\s*([\s\S]*?)```/); if(m){const p=JSON.parse(m[1]);if(Array.isArray(p))return p;} } catch(e){}
+  return null;
+}
+function stripJson(txt) { return txt.replace(/```json[\s\S]*?```/g,'').replace(/\n{3,}/g,'\n\n').trim(); }
+
+async function callDM(messages) {
+  const r = await fetch('/api/dm', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ messages, playerCount: S.numPlayers, system: SYSTEM_NL })
+  });
+  if (!r.ok) throw new Error('DM API ' + r.status);
+  const d = await r.json();
+  return d.text || '';
+}
+
+async function startGame() {
+  set({ loading:true, error:'' });
+  try {
+    const msgs = [{role:'user', content: INIT(S.numPlayers)}];
+    // Haal DM tekst op
+    dlog('DM call...');
+    const reply = await callDM(msgs);
+    dlog('DM reply: '+reply.length+'chars');
+    const chars = parseChars(reply);
+    const stry = stripJson(reply);
+    // Haal audio parallel op terwijl we de state updaten
+    const audioPromise = S.ttsOn ? fetchTTS(stry) : Promise.resolve(null);
+    set({ screen:'game', loading:false, story:stry, lastStory:stry, messages:[...msgs,{role:'assistant',content:reply}], characters:chars||[], transcript:'', pendingAction:'', error:'' });
+    // Wacht op audio en speel af
+    const buf = await audioPromise;
+    set({ pendingBuf: buf });
+  } catch(e) { set({ loading:false, error:'Fout: '+e.message }); }
+}
+
+async function sendAction(text) {
+  if (!text.trim() || S.loading) return;
+  set({ transcript:'', pendingAction:'', loading:true });
+  const msgs = [...S.messages, {role:'user', content:text}];
+  try {
+    dlog('DM call...');
+    const reply = await callDM(msgs);
+    dlog('DM reply: '+reply.length+'chars');
+    const chars = parseChars(reply);
+    const stry = stripJson(reply);
+    // Start audio fetch parallel met state update
+    const audioPromise = S.ttsOn ? fetchTTS(stry) : Promise.resolve(null);
+    set({ loading:false, story:S.story+'\n\n'+stry, lastStory:stry, messages:[...msgs,{role:'assistant',content:reply}], characters:chars||S.characters, error:'' });
+    const buf = await audioPromise;
+    set({ pendingBuf: buf });
+  } catch(e) { set({ loading:false, error:'Fout: '+e.message }); }
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+function hpColor(c) { const p=c.hp/c.maxHp; return p>.6?'#4caf50':p>.3?'#ff9800':'#e53935'; }
+function gcols(n) { return n<=1?'g1':n<=4?'g2':'g3'; }
+
+function charCard(c) {
+  const pct = Math.max(0,Math.min(1,c.hp/c.maxHp));
+  const sc = c.status==='dead'?'sd':c.status==='unconscious'?'su':'sa';
+  const sl = c.status==='dead'?'†':c.status==='unconscious'?'KO':'OK';
+  return `<div class="cc${c.status==='dead'?' dead':''}">
+    <div class="ccn">${c.name||'?'}</div>
+    <div class="ccc">${c.class||''} · Lv${c.level||1}</div>
+    <div class="hpb"><div class="hpf" style="width:${pct*100}%;background:${hpColor(c)}"></div></div>
+    <div class="stats">
+      <span class="badge h">❤ ${c.hp}/${c.maxHp}</span>
+      <span class="badge">🛡 ${c.ac}</span>
+      <span class="badge g">💰 ${c.gold}g</span>
+      <span class="badge x">⭐ ${c.xp}xp</span>
+    </div>
+    <div class="stats">${['str','dex','con','int','wis','cha'].map(s=>`<span class="badge">${s.toUpperCase()} ${c[s]||10}</span>`).join('')}</div>
+    ${c.inventory?.length?`<div class="invl">Inventory</div><div class="inv">${c.inventory.slice(0,5).join(', ')}</div>`:''}
+    <span class="spip ${sc}">${sl}</span>
+  </div>`;
+}
+
+// ── Render ────────────────────────────────────────────────────────────────────
+function draw() {
+  const root = document.getElementById('root');
+  if (!root) return;
+
+  // UNLOCK scherm — iOS audio permissie
+  if (!S.audioUnlocked) {
+    root.innerHTML = `<div class="wrap">
+      <div class="card">
+        <div class="icon">🔊</div>
+        <h2>Tik om te beginnen</h2>
+        <p>Tik op de knop om geluid in te schakelen voor de Dungeon Master stem. Dit is vereist door iOS.</p>
+        <button class="btn bp" style="width:100%;font-size:16px;padding:18px" onclick="unlockThenStart()">
+          🎙 Schakel geluid in
+        </button>
+      </div>
+    </div>`;
+    return;
+  }
+
+  if (S.screen === 'setup' || S.screen === 'loading') {
+    root.innerHTML = `<div class="wrap">
+      <div class="card">
+        <div class="icon">🐉</div>
+        <h2>Nieuw Avontuur</h2>
+        <p>Claude genereert karakters, bestuurt de wereld en vertelt het verhaal in het Nederlands. Spreek je acties in via de grote knop.</p>
+        <div class="sel-lbl">Aantal Spelers</div>
+        <div class="sel-row">
+          ${[1,2,3,4,5,6].map(n=>`<button class="sn${S.numPlayers===n?' on':''}" onclick="set({numPlayers:${n}})">${n}</button>`).join('')}
+        </div>
+        <div style="margin-bottom:16px">
+          <div class="sel-lbl" style="margin-bottom:8px">Stem van de DM</div>
+          <div class="voice-grid">
+            ${DM_VOICES.map(v=>`
+              <div class="vc${S.voiceId===v.id?' sel':''}" onclick="set({voiceId:'${v.id}'})">
+                <div class="vflag">${v.flag}</div>
+                <div class="vname">${v.name}</div>
+                <div class="vdesc">${v.desc}</div>
+                <div class="vprev" onclick="event.stopPropagation();previewVoice('${v.id}','${v.preview.replace(/'/g,"\\'")}')">▶ Preview</div>
+              </div>`).join('')}
+          </div>
+        </div>
+        ${S.error?`<div class="err" style="margin-bottom:12px">${S.error}</div>`:''}
+        <button class="btn bp" style="width:100%" ${S.loading?'disabled':''} onclick="startGame()">
+          ${S.loading?'Avontuur begint…':'⚔ Begin het Avontuur'}
+        </button>
+      </div>
+    </div>`;
+    return;
+  }
+
+  const storyParts = S.story.split('\n\n').filter(Boolean);
+
+  root.innerHTML = `<div class="wrap">
+
+    <!-- Verhaal -->
+    <div class="panel">
+      <div class="phdr">📜 Het Verhaal</div>
+      <div class="story" id="storyEl">
+        ${storyParts.length
+          ? storyParts.map(p=>`<p>${p}</p>`).join('')
+          : '<div class="empty">Het avontuur wacht…</div>'}
+        ${S.loading?'<div class="dots"><span></span><span></span><span></span></div>':''}
+      </div>
+      <div class="tts-bar">
+        ${S.speaking
+          ?`<div class="tts-on"><div class="waves"><span></span><span></span><span></span><span></span><span></span></div>&nbsp;DM spreekt…</div>`
+          :`<div style="font-size:9px;font-family:'Cinzel',serif;letter-spacing:1px;opacity:.5;color:var(--ink2)">${S.ttsOn?'🔊 Aan':'🔇 Uit'}</div>`}
+        <div class="tts-btns">
+          ${S.speaking
+            ?`<button class="tbtn stop" onclick="stopAudio()">■ Stop</button>`
+            :(S.pendingBuf||S.lastStory)?`<button class="tbtn" style="background:rgba(40,100,40,.2);border:1px solid rgba(80,160,40,.4);color:#90ee90" onclick="speakNow()">${S.pendingBuf?'▶ Voorlees 🎵':'▶ Voorlees'}</button>`:''}
+          <button class="tbtn mute" onclick="S.ttsOn=!S.ttsOn;stopAudio()">${S.ttsOn?'Uit':'Aan'}</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Karakters -->
+    ${S.characters.length?`
+    <div class="panel">
+      <div class="phdr">⚔ Avonturiers</div>
+      <div class="chars ${gcols(S.characters.length)}">
+        ${S.characters.map(c=>charCard(c)).join('')}
+      </div>
+    </div>`:''}
+
+    <!-- Dobbelstenen -->
+    <div class="dice-panel">
+      <div class="phdr">🎲 Dobbelstenen</div>
+      <div class="dice-row">
+        ${DICE.map(d=>`<button class="die" ontouchstart="event.preventDefault();rollDie(${d})" onclick="rollDie(${d})">
+          <span class="de">⬡</span><span>d${d}</span>
+        </button>`).join('')}
+      </div>
+      <div class="dice-result">
+        ${S.diceRolling
+          ?`<div class="dice-num" style="animation:none;opacity:.5">…</div>`
+          :S.diceResult
+            ?`<div class="dice-num">${S.diceResult.value}</div>
+              <div class="dice-desc">d${S.diceResult.die} — ${getDiceLabel(S.diceResult.die, S.diceResult.value)}</div>`
+            :`<div style="font-size:10px;color:var(--ink2);opacity:.5;font-style:italic">Tik een dobbelsteen om te gooien</div>`}
+      </div>
+    </div>
+
+    <!-- Spreek knop -->
+    <div class="ptt-wrap">
+      <button class="ptt${S.listening?' on':''}"
+        ${S.loading?'disabled':''}
+        ontouchstart="event.preventDefault();pttDown()"
+        ontouchend="event.preventDefault();pttUp()"
+        onmousedown="pttDown()"
+        onmouseup="pttUp()"
+        onmouseleave="if(S.listening)pttUp()">
+        <span class="pi">${S.listening?'🔴':'🎙'}</span>
+        <span>${S.listening?'Luisteren…':'Houd in'}</span>
+      </button>
+    </div>
+
+    <!-- Transcript + bevestiging -->
+    ${S.pendingAction||S.listening?`
+    <div class="tx-box">
+      <div class="tx-label">${S.listening?'🎙 Aan het luisteren…':'✓ Gehoord — klopt dit?'}</div>
+      <div class="tx-text">${S.transcript||S.pendingAction||'…'}</div>
+      ${S.pendingAction&&!S.listening?`
+      <div class="tx-btns">
+        <button class="tx-btn tx-send" onclick="sendAction(S.pendingAction)">✓ Verstuur</button>
+        <button class="tx-btn tx-redo" ontouchstart="event.preventDefault();pttDown()" ontouchend="event.preventDefault();pttUp()" onmousedown="pttDown()" onmouseup="pttUp()">🎙 Opnieuw</button>
+      </div>`:''}
+    </div>`:''}
+
+    ${S.error?`<div class="err">${S.error}</div>`:''}
+    ${S.debugLog?.length?`<div style="background:rgba(0,0,0,.8);border:1px solid #555;border-radius:4px;padding:8px;font-size:9px;font-family:monospace;color:#0f0;max-height:100px;overflow-y:auto">${S.debugLog.map(l=>`<div>${l}</div>`).join('')}</div>`:''}
+    <button class="reset" onclick="set({screen:'setup',story:'',messages:[],characters:[],error:'',transcript:'',pendingAction:'',diceResult:null})">✕ Nieuw Avontuur</button>
+  </div>`;
+
+  const el = document.getElementById('storyEl');
+  if (el) el.scrollTop = el.scrollHeight;
+}
+
+function getDiceLabel(die, val) {
+  if (die === 20) {
+    if (val === 20) return '🌟 Kritieke treffer!';
+    if (val === 1)  return '💀 Kritieke mislukking!';
+    if (val >= 15)  return 'Uitstekend';
+    if (val >= 10)  return 'Goed';
+    if (val >= 5)   return 'Matig';
+    return 'Slecht';
+  }
+  return `${val} van de ${die}`;
+}
+
+function pttDown() {
+  if (S.loading || S.listening) return;
+  startListen();
+}
+function pttUp() {
+  if (S.listening) stopListen();
+}
+
+draw();
+</script>
+</body>
+</html>
