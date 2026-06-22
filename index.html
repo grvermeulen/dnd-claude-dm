@@ -197,6 +197,7 @@ const DM_VOICES = [
 ];
 
 function set(p) { S = { ...S, ...p }; draw(); }
+const APP_VERSION = 'v5 · 22-06 dice+context';
 function dlog(msg) { const t=new Date().toLocaleTimeString('nl',{hour12:false}); set({debugLog:[...(S.debugLog||[]).slice(-8), t+' '+msg]}); console.log(msg); }
 
 // ── TTS via ElevenLabs + AudioContext (iOS compatibel) ──────────────────────
@@ -691,6 +692,7 @@ function draw() {
         <button class="btn bp" style="width:100%;margin-bottom:10px" onclick="set({screen:'setup',error:''})">⚔ Nieuw avontuur</button>
         <button class="btn bs" style="width:100%;margin-bottom:10px" onclick="set({screen:'join',joinError:''})">🤝 Deelnemen met code</button>
         ${last?`<button class="reset" style="margin-top:6px" onclick="resumeLast()">↻ Hervat sessie ${esc(last)}</button>`:''}
+        <div style="font-size:8px;opacity:.3;margin-top:10px;font-family:monospace;letter-spacing:1px">${APP_VERSION}</div>
       </div>
     </div>`;
     return;
