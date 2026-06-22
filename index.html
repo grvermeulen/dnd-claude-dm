@@ -30,7 +30,7 @@ body{background:var(--bg);font-family:'Lora',serif;color:var(--ink);min-height:1
 .sn:hover{border-color:var(--gold)}
 .sn.on{border-color:var(--gold2);background:rgba(200,146,42,.3);color:var(--blood);box-shadow:0 0 10px var(--glow)}
 .panel{background:var(--panel);border:1px solid var(--gold);border-radius:6px;box-shadow:0 4px 20px rgba(0,0,0,.6);overflow:hidden}
-.phdr{padding:7px 14px;background:rgba(200,146,42,.07);border-bottom:1px solid rgba(200,146,42,.2);font-family:'Cinzel',serif;font-size:9px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--ink2)}
+.phdr{padding:7px 14px;background:rgba(200,146,42,.07);border-bottom:1px solid rgba(200,146,42,.2);font-family:'Cinzel',serif;font-size:9px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--ink2);display:flex;justify-content:space-between;align-items:center}
 .story{padding:14px;min-height:140px;max-height:240px;overflow-y:auto;font-size:13px;line-height:1.85;color:var(--ink)}
 .story p{margin-bottom:10px}.story p:last-child{margin-bottom:0}
 .empty{height:100px;display:flex;align-items:center;justify-content:center;font-style:italic;opacity:.5;font-size:12px;text-align:center}
@@ -52,8 +52,10 @@ body{background:var(--bg);font-family:'Lora',serif;color:var(--ink);min-height:1
 .g1{grid-template-columns:1fr}.g2{grid-template-columns:1fr 1fr}.g3{grid-template-columns:1fr 1fr 1fr}
 .cc{background:rgba(255,255,255,.18);border:1px solid rgba(200,146,42,.3);border-radius:4px;padding:8px;position:relative}
 .cc.dead{opacity:.4;filter:grayscale(.6)}
+.cc.mine{border-color:var(--gold2);box-shadow:0 0 0 1px var(--gold2),0 0 10px var(--glow)}
 .ccn{font-family:'Cinzel',serif;font-size:10px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:1px}
 .ccc{font-size:8px;color:var(--ink2);font-style:italic;margin-bottom:5px}
+.cco{font-size:7px;letter-spacing:1px;text-transform:uppercase;color:var(--blood);font-family:'Cinzel',serif;margin-bottom:4px}
 .hpb{height:3px;background:rgba(122,21,21,.15);border-radius:2px;margin-bottom:5px;overflow:hidden}
 .hpf{height:100%;border-radius:2px;transition:width .5s}
 .stats{display:flex;gap:3px;flex-wrap:wrap;margin-bottom:4px}
@@ -102,10 +104,24 @@ body{background:var(--bg);font-family:'Lora',serif;color:var(--ink);min-height:1
 .vc{background:rgba(255,255,255,.15);border:2px solid rgba(200,146,42,.3);border-radius:5px;padding:10px 8px;cursor:pointer;text-align:center;transition:all .15s;-webkit-tap-highlight-color:transparent}
 .vc:active{transform:scale(.97)}
 .vc.sel{border-color:var(--gold2);background:rgba(200,146,42,.25);box-shadow:0 0 10px var(--glow)}
+.vc.taken{opacity:.4;filter:grayscale(.5);cursor:not-allowed}
 .vc .vflag{font-size:22px;margin-bottom:4px}
 .vc .vname{font-family:'Cinzel',serif;font-size:11px;font-weight:700;color:var(--ink)}
 .vc .vdesc{font-size:9px;color:var(--ink2);font-style:italic;margin-top:2px}
 .vc .vprev{font-size:8px;color:var(--blood);font-family:'Cinzel',serif;letter-spacing:1px;margin-top:4px;cursor:pointer}
+
+/* SESSION */
+.tin{width:100%;padding:12px;border-radius:4px;border:1px solid var(--gold);background:rgba(0,0,0,.25);color:var(--gold2);font-family:'Cinzel',serif;font-size:14px;text-align:center;letter-spacing:2px;margin-bottom:12px;outline:none}
+.tin.code{font-size:24px;letter-spacing:8px;text-transform:uppercase}
+.tin::placeholder{color:rgba(230,208,154,.35);letter-spacing:1px}
+.code-big{font-family:'Cinzel',serif;font-size:36px;font-weight:900;letter-spacing:10px;color:var(--gold2);text-shadow:0 0 22px var(--glow);padding:6px 0 2px}
+.code-banner{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 12px;background:var(--panel);border:1px solid var(--gold);border-radius:6px;box-shadow:0 4px 20px rgba(0,0,0,.6)}
+.code-banner .cb-code{font-family:'Cinzel',serif;font-size:18px;font-weight:900;letter-spacing:4px;color:var(--blood)}
+.code-banner .cb-lbl{font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--ink2);opacity:.7}
+.cpy{background:rgba(200,146,42,.15);border:1px solid rgba(200,146,42,.4);border-radius:3px;padding:5px 9px;font-size:8px;font-family:'Cinzel',serif;letter-spacing:1px;text-transform:uppercase;cursor:pointer;color:var(--ink)}
+.players-row{display:flex;gap:5px;flex-wrap:wrap}
+.pchip{font-family:'Cinzel',serif;font-size:8px;letter-spacing:1px;padding:3px 8px;border-radius:10px;border:1px solid rgba(200,146,42,.4);background:rgba(200,146,42,.12);color:var(--ink)}
+.pchip.me{border-color:var(--gold2);background:rgba(200,146,42,.28);color:var(--blood)}
 </style>
 </head>
 <body>
@@ -116,29 +132,53 @@ body{background:var(--bg);font-family:'Lora',serif;color:var(--ink);min-height:1
   </div>
   <div id="root"></div>
 </div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
+// ── Supabase (publishable key, protected by Row Level Security) ───────────────
+const SUPABASE_URL = 'https://qgjzixblvohjggcwdaou.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_svsBau4co2d15f4RrbXplA_qFOGARD3';
+let _sb = null;
+function sb() { if (!_sb) _sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY); return _sb; }
+
+// Stable per-device player id (so resuming a session re-claims your character)
+function getPlayerId() {
+  let id = localStorage.getItem('dnd_playerId');
+  if (!id) { id = 'p_' + Math.random().toString(36).slice(2, 10); localStorage.setItem('dnd_playerId', id); }
+  return id;
+}
+
 // ── State ─────────────────────────────────────────────────────────────────────
 let S = {
-  screen: 'setup',
+  screen: 'home',          // home | setup | join | pick | game
   audioUnlocked: false,
   numPlayers: 4,
   story: '',
   messages: [],
   characters: [],
+  players: [],
   loading: false,
   listening: false,
   transcript: '',
-  pendingAction: '',   // tekst klaar om te versturen
+  pendingAction: '',
   speaking: false,
   ttsOn: true,
   error: '',
-  diceResult: null,    // { die, value }
+  diceResult: null,        // { die, value }
+  diceBy: '',
   diceRolling: false,
   debugLog: [],
   lastStory: '',
-  pendingBuf: null,
   voiceId: 'JBFqnCBsd6RMkjVDRZzb',
-  showVoices: false
+  // session / multiplayer
+  playerId: getPlayerId(),
+  playerName: localStorage.getItem('dnd_playerName') || '',
+  sessionCode: '',
+  myCharIndex: null,
+  isHost: false,
+  joinCode: '',
+  joinError: '',
+  streaming: false,
+  streamText: '',
 };
 
 // ── DM Stemmen ────────────────────────────────────────────────────────────────
@@ -155,7 +195,7 @@ const DM_VOICES = [
   { id: 'hmMWXCj9K7N5mCPcRkfC', name: 'Rory',     desc: 'Ierse avonturier',       flag: '🍀', preview: 'Ah, gather round friends! Have I got a tale for ye this fine evening.' },
 ];
 
-function set(p) { S={...S,...p}; draw(); }
+function set(p) { S = { ...S, ...p }; draw(); }
 function dlog(msg) { const t=new Date().toLocaleTimeString('nl',{hour12:false}); set({debugLog:[...(S.debugLog||[]).slice(-8), t+' '+msg]}); console.log(msg); }
 
 // ── TTS via ElevenLabs + AudioContext (iOS compatibel) ──────────────────────
@@ -185,71 +225,11 @@ async function previewVoice(voiceId, text) {
     if (_sourceNode) { try{_sourceNode.stop();}catch(e){} }
     const src = ctx.createBufferSource();
     src.buffer = decoded;
-    const gain = ctx.createGain();
-    gain.gain.setValueAtTime(1.0, ctx.currentTime);
-    src.connect(gain);
-    gain.connect(ctx.destination);
+    src.connect(ctx.destination);
     src.onended = () => { _sourceNode=null; };
     _sourceNode = src;
     src.start(0);
   } catch(e) { console.error('preview:', e); }
-}
-
-async function speakNow() {
-  stopAudio();
-  try {
-    const ctx = getCtx();
-    await ctx.resume();
-    dlog('CTX: '+ctx.state);
-
-    // Gebruik pre-opgehaalde buffer als beschikbaar
-    let buf = S.pendingBuf;
-    if (!buf && S.lastStory) {
-      dlog('Ophalen...');
-      set({ speaking: true });
-      const clean = S.lastStory.replace(/```[\s\S]*?```/g,'').replace(/[*_#`\[\]]/g,'').trim();
-      const r = await fetch('/api/tts', {
-        method:'POST', headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({ text: clean.slice(0,800), voiceId: S.voiceId })
-      });
-      if (!r.ok) { set({speaking:false}); return; }
-      buf = await r.arrayBuffer();
-    }
-    if (!buf) { dlog('Geen audio'); return; }
-
-    // buf kan een array zijn (meerdere chunks) of een enkel buffer
-    const bufArray = Array.isArray(buf) ? buf : [buf];
-    dlog('Afspelen: ' + bufArray.length + ' delen');
-    set({ speaking: true, pendingBuf: null });
-    
-    // Decodeer alle delen
-    const decodedParts = await Promise.all(
-      bufArray.map(b => ctx.decodeAudioData(b.slice ? b.slice(0) : b))
-    );
-    
-    // Speel achter elkaar af
-    let startTime = ctx.currentTime;
-    for (let i = 0; i < decodedParts.length; i++) {
-      const dec = decodedParts[i];
-      const src = ctx.createBufferSource();
-      src.buffer = dec;
-      const gain = ctx.createGain();
-      gain.gain.setValueAtTime(1.0, ctx.currentTime);
-      src.connect(gain);
-      gain.connect(ctx.destination);
-      if (i === decodedParts.length - 1) {
-        src.onended = () => { _sourceNode=null; set({speaking:false}); };
-      }
-      src.start(startTime);
-      startTime += dec.duration;
-      if (i === 0) _sourceNode = src;
-    }
-    dlog('Speelt! totaal ' + decodedParts.reduce((s,d)=>s+d.duration,0).toFixed(1) + 's');
-  } catch(e) {
-    dlog('Fout: '+e.message);
-    set({speaking:false});
-    if (S.lastStory) speakFallback(S.lastStory);
-  }
 }
 
 function stopAudio() {
@@ -258,78 +238,76 @@ function stopAudio() {
   set({ speaking: false });
 }
 
-// Haalt audio op als ArrayBuffer (parallel met DM response)
-// Splits tekst in zinnen, max 4500 tekens per chunk
+// Splits tekst in zinnen, max 4500 tekens per chunk (geen afgekapte voorlezing meer)
 function splitText(text) {
   const clean = text.replace(/```[\s\S]*?```/g,'').replace(/[*_#`\[\]]/g,'').trim();
-  if (clean.length <= 4500) return [clean];
+  if (clean.length <= 4500) return clean ? [clean] : [];
   const chunks = [];
   let current = '';
   const sentences = clean.match(/[^.!?]+[.!?]+|[^.!?]+$/g) || [clean];
   for (const s of sentences) {
-    if ((current + s).length > 4500 && current) {
-      chunks.push(current.trim());
-      current = s;
-    } else {
-      current += s;
-    }
+    if ((current + s).length > 4500 && current) { chunks.push(current.trim()); current = s; }
+    else current += s;
   }
   if (current.trim()) chunks.push(current.trim());
   return chunks;
 }
 
+// Haalt audio op als array van ArrayBuffers (alle delen parallel)
 async function fetchTTS(text) {
   const chunks = splitText(text);
+  if (!chunks.length) return null;
   dlog('TTS ' + chunks.length + ' deel/delen, ' + text.length + ' tekens');
   try {
-    // Haal alle chunks parallel op
     const bufs = await Promise.all(chunks.map(async chunk => {
       const r = await fetch('/api/tts', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ text: chunk, voiceId: S.voiceId })
       });
-      if (!r.ok) {
-        const err = await r.text().catch(()=>'');
-        dlog('Chunk fout ' + r.status + ': ' + err.slice(0,60));
-        return null;
-      }
+      if (!r.ok) { const err = await r.text().catch(()=>''); dlog('Chunk fout ' + r.status + ': ' + err.slice(0,60)); return null; }
       return await r.arrayBuffer();
     }));
     const valid = bufs.filter(Boolean);
     if (!valid.length) return null;
     dlog('TTS klaar: ' + valid.length + ' delen');
-    return valid; // Geef array terug, niet gecombineerd
+    return valid;
   } catch(e) { dlog('TTS fout: ' + e.message); return null; }
 }
 
-// Speelt een al-opgehaalde ArrayBuffer af via AudioContext
-async function playBuffer(buf) {
-  if (!buf) { console.log('playBuffer: geen buf'); return; }
+// Speelt één of meerdere ArrayBuffers achter elkaar af via AudioContext.
+// Geeft true terug bij succes, false als decoderen/afspelen mislukt.
+async function playBuffers(bufs) {
+  const arr = Array.isArray(bufs) ? bufs : [bufs];
+  if (!arr.length) return false;
   try {
     const ctx = getCtx();
-    dlog('CTX: '+ctx.state+' buf:'+buf.byteLength);
-    const decoded = await ctx.decodeAudioData(buf.slice(0));
-    dlog('Decoded: '+decoded.duration.toFixed(1)+'s');
-    if (_sourceNode) { try{_sourceNode.stop();}catch(e){} }
-    const src = ctx.createBufferSource();
-    src.buffer = decoded;
-    src.connect(ctx.destination);
-    src.onended = () => { _sourceNode = null; set({ speaking: false }); };
-    _sourceNode = src;
+    await ctx.resume();
+    if (_sourceNode) { try{_sourceNode.stop();}catch(e){} _sourceNode=null; }
+    const decoded = await Promise.all(arr.map(b => ctx.decodeAudioData(b.slice ? b.slice(0) : b)));
+    let t = ctx.currentTime;
     set({ speaking: true });
-    src.start(0);
-    dlog('Speelt!');
+    decoded.forEach((dec, i) => {
+      const src = ctx.createBufferSource();
+      src.buffer = dec;
+      src.connect(ctx.destination);
+      if (i === decoded.length - 1) src.onended = () => { _sourceNode=null; set({speaking:false}); };
+      src.start(t);
+      t += dec.duration;
+      if (i === 0) _sourceNode = src;
+    });
+    dlog('Speelt! totaal ' + decoded.reduce((s,d)=>s+d.duration,0).toFixed(1) + 's');
+    return true;
   } catch(e) {
     dlog('PLAY FOUT: '+e.name+' '+e.message);
-    set({ speaking: false, error: 'Audio: ' + e.message });
+    set({ speaking: false });
+    return false;
   }
 }
 
 function speakFallback(text) {
   window.speechSynthesis.cancel();
   if (!text) return;
-  const utt = new SpeechSynthesisUtterance(text.slice(0,900));
+  const utt = new SpeechSynthesisUtterance(text.slice(0, 1500));
   utt.lang = 'en-GB'; utt.rate = 0.82; utt.pitch = 0.78;
   const voices = window.speechSynthesis.getVoices();
   const v = voices.find(v => /daniel|george|arthur|david/i.test(v.name) && /en/i.test(v.lang));
@@ -339,31 +317,26 @@ function speakFallback(text) {
   window.speechSynthesis.speak(utt);
 }
 
+// Voorlezen van de volledige tekst (geen afkapping)
 async function speak(text) {
   stopAudio();
-  if (!S.ttsOn || !S.audioUnlocked) return;
+  if (!text) return;
   const clean = text.replace(/```[\s\S]*?```/g,'').replace(/[*_#`\[\]]/g,'').trim();
   if (!clean) return;
-  const buf = await fetchTTS(clean);
-  if (buf) {
-    await playBuffer(buf);
-  } else {
-    speakFallback(clean);
-  }
+  const bufs = await fetchTTS(clean);
+  if (!(bufs && await playBuffers(bufs))) speakFallback(clean);
 }
+
+// Manuele "Voorlees" knop
+function speakNow() { speak(S.lastStory); }
 
 // ── Audio unlock via directe tap ─────────────────────────────────────────────
 function unlockThenStart() {
-  // Spreek een korte stille zin — dit geeft iOS toestemming voor de hele sessie
   const utt = new SpeechSynthesisUtterance(' ');
   utt.volume = 0.01;
-  utt.onend = () => {
-    set({ audioUnlocked: true, screen: 'setup' });
-  };
-  utt.onerror = () => {
-    // Toch doorgaan, misschien werkt het alsnog
-    set({ audioUnlocked: true, screen: 'setup' });
-  };
+  utt.onend = () => set({ audioUnlocked: true, screen: 'home' });
+  utt.onerror = () => set({ audioUnlocked: true, screen: 'home' });
+  try { getCtx().resume(); } catch(e) {}
   window.speechSynthesis.speak(utt);
 }
 
@@ -371,20 +344,18 @@ function unlockThenStart() {
 const DICE = [4,6,8,10,12,20,100];
 
 function rollDie(sides) {
-  
   set({ diceRolling: true, diceResult: null });
-  // Dobbelsteengeluid via AudioContext
   playDiceSound();
-  setTimeout(() => {
+  setTimeout(async () => {
     const val = Math.floor(Math.random() * sides) + 1;
-    set({ diceRolling: false, diceResult: { die: sides, value: val } });
+    set({ diceRolling: false, diceResult: { die: sides, value: val }, diceBy: myCharName() || (S.playerName||'Jij') });
+    if (S.sessionCode) { try { await dbUpdate({ dice: { die: sides, value: val, by: myCharName() || (S.playerName||'Speler'), ts: Date.now() } }); } catch(e){} }
   }, 600);
 }
 
 function playDiceSound() {
   try {
-    const ctx = getAudioCtx();
-    // Rattle geluid: meerdere korte klikken
+    const ctx = getCtx();
     for (let i = 0; i < 6; i++) {
       const t = ctx.currentTime + i * 0.08;
       const osc = ctx.createOscillator();
@@ -396,7 +367,6 @@ function playDiceSound() {
       gain.gain.exponentialRampToValueAtTime(0.001, t + 0.05);
       osc.start(t); osc.stop(t + 0.05);
     }
-    // Slotklap
     const t2 = ctx.currentTime + 0.55;
     const osc2 = ctx.createOscillator();
     const g2 = ctx.createGain();
@@ -423,13 +393,8 @@ function startListen() {
     const txt = Array.from(e.results).map(r=>r[0].transcript).join('');
     set({ transcript: txt });
   };
-  _rec.onend = () => {
-    const final = S.transcript;
-    set({ listening: false, pendingAction: final });
-  };
-  _rec.onerror = e => {
-    set({ listening: false, error: 'Mic fout: ' + e.error });
-  };
+  _rec.onend = () => set({ listening: false, pendingAction: S.transcript });
+  _rec.onerror = e => set({ listening: false, error: 'Mic fout: ' + e.error });
   try { _rec.start(); set({ listening: true, transcript: '', pendingAction: '' }); }
   catch(e) { set({ error: 'Mic: ' + e.message }); }
 }
@@ -439,11 +404,12 @@ function stopListen() {
   set({ listening: false });
 }
 
-// ── Claude DM ─────────────────────────────────────────────────────────────────
+// ── DM tekst & karakters ────────────────────────────────────────────────────
 const INIT = n => `Start een klassiek fantasy D&D avontuur voor ${n} speler(s)! Spreek ALTIJD Nederlands. Genereer ${n} unieke karakters (gevarieerde klassen/rassen). Beschrijf de openingsscène levendig. Geef de eerste haak of ontmoeting. Voeg volledige JSON toe voor alle ${n} karakters.`;
 
 const SYSTEM_NL = `Je bent een meeslepende Dungeon Master voor een klassiek fantasy D&D avontuur. Spreek ALTIJD in het Nederlands. Gebruik een vereenvoudigd systeem zonder spell slots.
 - Levendige maar beknopte beschrijvingen (3-5 zinnen per beurt).
+- Meerdere spelers kunnen meedoen. Een spelersbericht kan beginnen met de naam van het handelende personage tussen haken, bv. "[Thorin] valt de ork aan". Richt je antwoord op het juiste personage.
 - Na ELKE reactie een JSON-blok met alle karakters:
 \`\`\`json
 [{"name":"Naam","class":"Klasse","hp":25,"maxHp":25,"ac":14,"gold":10,"xp":0,"level":1,"str":12,"dex":14,"con":12,"int":10,"wis":10,"cha":10,"inventory":["item"],"status":"alive"}]
@@ -454,66 +420,215 @@ function parseChars(txt) {
   try { const m=txt.match(/```json\s*([\s\S]*?)```/); if(m){const p=JSON.parse(m[1]);if(Array.isArray(p))return p;} } catch(e){}
   return null;
 }
-function stripJson(txt) { return txt.replace(/```json[\s\S]*?```/g,'').replace(/\n{3,}/g,'\n\n').trim(); }
+function stripJson(txt) { return txt.replace(/```json[\s\S]*?```/g,'').replace(/```[\s\S]*?$/,'').replace(/\n{3,}/g,'\n\n').trim(); }
 
-async function callDM(messages) {
+// Streamt het DM-antwoord (SSE) en roept onDelta(volledigeTekstTotNu) aan
+async function callDMStream(messages, onDelta) {
   const r = await fetch('/api/dm', {
     method:'POST', headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({ messages, playerCount: S.numPlayers, system: SYSTEM_NL })
+    body: JSON.stringify({ messages, playerCount: S.numPlayers, system: SYSTEM_NL, stream: true })
   });
-  if (!r.ok) throw new Error('DM API ' + r.status);
-  const d = await r.json();
-  return d.text || '';
+  if (!r.ok || !r.body) throw new Error('DM API ' + r.status);
+  const reader = r.body.getReader();
+  const dec = new TextDecoder();
+  let buf = '', full = '';
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    buf += dec.decode(value, { stream: true });
+    let nl;
+    while ((nl = buf.indexOf('\n')) >= 0) {
+      const line = buf.slice(0, nl).trim();
+      buf = buf.slice(nl + 1);
+      if (!line.startsWith('data:')) continue;
+      const data = line.slice(5).trim();
+      if (!data || data === '[DONE]') continue;
+      try {
+        const ev = JSON.parse(data);
+        if (ev.type === 'content_block_delta' && ev.delta && ev.delta.text) {
+          full += ev.delta.text;
+          onDelta && onDelta(full);
+        }
+      } catch(e) {}
+    }
+  }
+  return full;
 }
 
-async function startGame() {
-  set({ loading:true, error:'' });
+function myCharName() { const c = S.characters[S.myCharIndex]; return c ? c.name : ''; }
+
+// ── Supabase sessie-helpers ──────────────────────────────────────────────────
+let _channel = null;
+let _syncedStory = '';   // laatst gehoorde verhaal (om dubbel voorlezen te voorkomen)
+
+function genCode() {
+  const a = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+  let s = ''; for (let i=0;i<4;i++) s += a[Math.floor(Math.random()*a.length)];
+  return s;
+}
+
+async function dbUpdate(patch) {
+  const { error } = await sb().from('sessions').update(patch).eq('code', S.sessionCode);
+  if (error) dlog('DB update fout: ' + error.message);
+}
+
+function applyRow(row, allowAudio) {
+  if (!row) return;
+  const isNew = row.last_story && row.last_story !== _syncedStory;
+  _syncedStory = row.last_story || _syncedStory;
+  set({
+    story: row.story || '',
+    characters: row.characters || [],
+    players: row.players || [],
+    loading: !!row.loading,
+    lastStory: row.last_story || S.lastStory,
+    diceResult: row.dice ? { die: row.dice.die, value: row.dice.value } : S.diceResult,
+    diceBy: row.dice ? (row.dice.by || '') : S.diceBy,
+  });
+  if (allowAudio && isNew && S.ttsOn && S.audioUnlocked && !S.streaming) speak(row.last_story);
+}
+
+function subscribe(code) {
+  unsubscribe();
+  _channel = sb()
+    .channel('session:' + code)
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'sessions', filter: 'code=eq.' + code }, payload => {
+      applyRow(payload.new, true);
+    })
+    .subscribe();
+}
+function unsubscribe() { if (_channel) { try { sb().removeChannel(_channel); } catch(e){} _channel = null; } }
+
+// Live-streaming weergave tijdens het genereren (licht gethrottled)
+let _lastStreamPaint = 0;
+function onStreamDelta(full) {
+  const now = Date.now();
+  if (now - _lastStreamPaint > 90) { _lastStreamPaint = now; set({ streaming: true, streamText: stripJson(full) }); }
+}
+
+// Host maakt een nieuwe sessie aan
+async function createSession() {
+  if (S.playerName) localStorage.setItem('dnd_playerName', S.playerName);
+  set({ loading: true, error: '' });
+  const code = genCode();
   try {
-    const msgs = [{role:'user', content: INIT(S.numPlayers)}];
-    // Haal DM tekst op
-    dlog('DM call...');
-    const reply = await callDM(msgs);
-    dlog('DM reply: '+reply.length+'chars');
+    const { error } = await sb().from('sessions').insert({ code, player_count: S.numPlayers, voice_id: S.voiceId });
+    if (error) throw error;
+    localStorage.setItem('dnd_lastSession', code);
+    _syncedStory = '';
+    set({ sessionCode: code, isHost: true, myCharIndex: 0, screen: 'game', story: '', messages: [], characters: [], players: [], loading: true });
+    subscribe(code);
+    await runDM([{ role: 'user', content: INIT(S.numPlayers) }], { claimHost: true });
+  } catch(e) { set({ loading: false, error: 'Kon sessie niet maken: ' + e.message }); }
+}
+
+// Speler komt binnen via code (nieuw of hervatten)
+async function joinSession() {
+  const code = (S.joinCode || '').trim().toUpperCase();
+  if (code.length < 4) { set({ joinError: 'Voer een geldige code in' }); return; }
+  if (S.playerName) localStorage.setItem('dnd_playerName', S.playerName);
+  set({ loading: true, joinError: '' });
+  try {
+    const { data, error } = await sb().from('sessions').select('*').eq('code', code).maybeSingle();
+    if (error) throw error;
+    if (!data) { set({ loading: false, joinError: 'Sessie niet gevonden' }); return; }
+    localStorage.setItem('dnd_lastSession', code);
+    _syncedStory = data.last_story || '';
+    const existing = (data.players || []).find(p => p.id === S.playerId);
+    set({ sessionCode: code, voiceId: data.voice_id, numPlayers: data.player_count, loading: false });
+    applyRow(data, false);
+    subscribe(code);
+    if (existing) set({ myCharIndex: existing.charIndex, screen: 'game' });
+    else set({ screen: 'pick' });
+  } catch(e) { set({ loading: false, joinError: 'Fout: ' + e.message }); }
+}
+
+// Hervat de laatst gebruikte sessie
+function resumeLast() {
+  const code = localStorage.getItem('dnd_lastSession');
+  if (!code) return;
+  set({ joinCode: code, screen: 'join' });
+  joinSession();
+}
+
+// Kies een (nog vrij) personage
+async function claimChar(idx) {
+  try {
+    const { data } = await sb().from('sessions').select('players').eq('code', S.sessionCode).maybeSingle();
+    const players = (data && data.players) || [];
+    if (players.find(p => p.charIndex === idx && p.id !== S.playerId)) { set({ error: 'Dat personage is al gekozen' }); return; }
+    const others = players.filter(p => p.id !== S.playerId);
+    const np = [...others, { id: S.playerId, name: S.playerName || 'Speler', charIndex: idx }];
+    await sb().from('sessions').update({ players: np }).eq('code', S.sessionCode);
+    set({ myCharIndex: idx, screen: 'game', error: '' });
+  } catch(e) { set({ error: 'Fout: ' + e.message }); }
+}
+
+// Roept de DM aan (streamend), schrijft het resultaat naar de sessie
+async function runDM(msgs, opts) {
+  opts = opts || {};
+  try {
+    await dbUpdate({ loading: true });
+    set({ loading: true, streaming: true, streamText: '' });
+    const reply = await callDMStream(msgs, onStreamDelta);
     const chars = parseChars(reply);
     const stry = stripJson(reply);
-    // Haal audio parallel op terwijl we de state updaten
-    const audioPromise = S.ttsOn ? fetchTTS(stry) : Promise.resolve(null);
-    set({ screen:'game', loading:false, story:stry, lastStory:stry, messages:[...msgs,{role:'assistant',content:reply}], characters:chars||[], transcript:'', pendingAction:'', error:'' });
-    // Wacht op audio en speel af
-    const buf = await audioPromise;
-    set({ pendingBuf: buf });
-  } catch(e) { set({ loading:false, error:'Fout: '+e.message }); }
+    const newMessages = [...msgs, { role: 'assistant', content: reply }];
+    const fullStory = opts.append && S.story ? S.story + '\n\n' + stry : stry;
+    const patch = {
+      messages: newMessages,
+      characters: chars || S.characters,
+      story: fullStory,
+      last_story: stry,
+      loading: false,
+      dice: null,
+    };
+    if (opts.claimHost) patch.players = [{ id: S.playerId, name: S.playerName || 'Host', charIndex: 0 }];
+    // Toon de definitieve tekst meteen lokaal (geen flikkering tot de echo terugkomt).
+    // _syncedStory blijft ongewijzigd, zodat de realtime-echo nog steeds voorleest.
+    set({ streaming: false, streamText: '', story: fullStory, characters: chars || S.characters, lastStory: stry, diceResult: null });
+    await dbUpdate(patch);   // realtime echo levert de definitieve state + voorlezing
+  } catch(e) {
+    set({ streaming: false, loading: false, error: 'Fout: ' + e.message });
+    try { await dbUpdate({ loading: false }); } catch(_) {}
+  }
 }
 
 async function sendAction(text) {
   if (!text.trim() || S.loading) return;
-  set({ transcript:'', pendingAction:'', loading:true });
-  const msgs = [...S.messages, {role:'user', content:text}];
-  try {
-    dlog('DM call...');
-    const reply = await callDM(msgs);
-    dlog('DM reply: '+reply.length+'chars');
-    const chars = parseChars(reply);
-    const stry = stripJson(reply);
-    // Start audio fetch parallel met state update
-    const audioPromise = S.ttsOn ? fetchTTS(stry) : Promise.resolve(null);
-    set({ loading:false, story:S.story+'\n\n'+stry, lastStory:stry, messages:[...msgs,{role:'assistant',content:reply}], characters:chars||S.characters, error:'' });
-    const buf = await audioPromise;
-    set({ pendingBuf: buf });
-  } catch(e) { set({ loading:false, error:'Fout: '+e.message }); }
+  set({ transcript: '', pendingAction: '' });
+  const who = myCharName();
+  const content = who ? `[${who}] ${text}` : text;
+  await runDM([...S.messages, { role: 'user', content }], { append: true });
+}
+
+function leaveSession() {
+  unsubscribe();
+  _syncedStory = '';
+  stopAudio();
+  set({ screen: 'home', sessionCode: '', isHost: false, myCharIndex: null, story: '', messages: [], characters: [], players: [], error: '', transcript: '', pendingAction: '', diceResult: null, lastStory: '', streaming: false, streamText: '' });
+}
+
+function copyCode() {
+  try { navigator.clipboard.writeText(S.sessionCode); dlog('Code gekopieerd'); } catch(e){}
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 function hpColor(c) { const p=c.hp/c.maxHp; return p>.6?'#4caf50':p>.3?'#ff9800':'#e53935'; }
 function gcols(n) { return n<=1?'g1':n<=4?'g2':'g3'; }
+function esc(s) { return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function ownerOf(idx) { const p = (S.players||[]).find(p => p.charIndex === idx); return p ? p.name : ''; }
 
-function charCard(c) {
+function charCard(c, idx) {
   const pct = Math.max(0,Math.min(1,c.hp/c.maxHp));
   const sc = c.status==='dead'?'sd':c.status==='unconscious'?'su':'sa';
   const sl = c.status==='dead'?'†':c.status==='unconscious'?'KO':'OK';
-  return `<div class="cc${c.status==='dead'?' dead':''}">
-    <div class="ccn">${c.name||'?'}</div>
-    <div class="ccc">${c.class||''} · Lv${c.level||1}</div>
+  const owner = ownerOf(idx);
+  const mine = idx === S.myCharIndex;
+  return `<div class="cc${c.status==='dead'?' dead':''}${mine?' mine':''}">
+    <div class="ccn">${esc(c.name)||'?'}</div>
+    <div class="ccc">${esc(c.class)||''} · Lv${c.level||1}</div>
+    ${owner?`<div class="cco">${mine?'★ jij':'👤 '+esc(owner)}</div>`:''}
     <div class="hpb"><div class="hpf" style="width:${pct*100}%;background:${hpColor(c)}"></div></div>
     <div class="stats">
       <span class="badge h">❤ ${c.hp}/${c.maxHp}</span>
@@ -522,7 +637,7 @@ function charCard(c) {
       <span class="badge x">⭐ ${c.xp}xp</span>
     </div>
     <div class="stats">${['str','dex','con','int','wis','cha'].map(s=>`<span class="badge">${s.toUpperCase()} ${c[s]||10}</span>`).join('')}</div>
-    ${c.inventory?.length?`<div class="invl">Inventory</div><div class="inv">${c.inventory.slice(0,5).join(', ')}</div>`:''}
+    ${c.inventory?.length?`<div class="invl">Inventory</div><div class="inv">${esc(c.inventory.slice(0,5).join(', '))}</div>`:''}
     <span class="spip ${sc}">${sl}</span>
   </div>`;
 }
@@ -539,21 +654,37 @@ function draw() {
         <div class="icon">🔊</div>
         <h2>Tik om te beginnen</h2>
         <p>Tik op de knop om geluid in te schakelen voor de Dungeon Master stem. Dit is vereist door iOS.</p>
-        <button class="btn bp" style="width:100%;font-size:16px;padding:18px" onclick="unlockThenStart()">
-          🎙 Schakel geluid in
-        </button>
+        <button class="btn bp" style="width:100%;font-size:16px;padding:18px" onclick="unlockThenStart()">🎙 Schakel geluid in</button>
       </div>
     </div>`;
     return;
   }
 
-  if (S.screen === 'setup' || S.screen === 'loading') {
+  // HOME — kies nieuw of deelnemen
+  if (S.screen === 'home') {
+    const last = localStorage.getItem('dnd_lastSession');
     root.innerHTML = `<div class="wrap">
       <div class="card">
         <div class="icon">🐉</div>
+        <h2>Avontuur</h2>
+        <p>Speel samen met Claude als Dungeon Master. Maak een sessie en deel de code, of sluit aan bij vrienden.</p>
+        <input class="tin" placeholder="Jouw naam" value="${esc(S.playerName)}" oninput="S.playerName=this.value" maxlength="20"/>
+        <button class="btn bp" style="width:100%;margin-bottom:10px" onclick="set({screen:'setup',error:''})">⚔ Nieuw avontuur</button>
+        <button class="btn bs" style="width:100%;margin-bottom:10px" onclick="set({screen:'join',joinError:''})">🤝 Deelnemen met code</button>
+        ${last?`<button class="reset" style="margin-top:6px" onclick="resumeLast()">↻ Hervat sessie ${esc(last)}</button>`:''}
+      </div>
+    </div>`;
+    return;
+  }
+
+  // SETUP — host kiest spelers + stem
+  if (S.screen === 'setup') {
+    root.innerHTML = `<div class="wrap">
+      <div class="card">
+        <div class="icon">🗺️</div>
         <h2>Nieuw Avontuur</h2>
-        <p>Claude genereert karakters, bestuurt de wereld en vertelt het verhaal in het Nederlands. Spreek je acties in via de grote knop.</p>
-        <div class="sel-lbl">Aantal Spelers</div>
+        <p>Claude genereert de personages en vertelt het verhaal. Na het starten krijg je een code om vrienden te laten meedoen.</p>
+        <div class="sel-lbl">Aantal Personages</div>
         <div class="sel-row">
           ${[1,2,3,4,5,6].map(n=>`<button class="sn${S.numPlayers===n?' on':''}" onclick="set({numPlayers:${n}})">${n}</button>`).join('')}
         </div>
@@ -569,27 +700,76 @@ function draw() {
               </div>`).join('')}
           </div>
         </div>
-        ${S.error?`<div class="err" style="margin-bottom:12px">${S.error}</div>`:''}
-        <button class="btn bp" style="width:100%" ${S.loading?'disabled':''} onclick="startGame()">
-          ${S.loading?'Avontuur begint…':'⚔ Begin het Avontuur'}
-        </button>
+        ${S.error?`<div class="err" style="margin-bottom:12px">${esc(S.error)}</div>`:''}
+        <button class="btn bp" style="width:100%;margin-bottom:8px" ${S.loading?'disabled':''} onclick="createSession()">${S.loading?'Avontuur begint…':'⚔ Begin het Avontuur'}</button>
+        <button class="reset" onclick="set({screen:'home'})">← Terug</button>
       </div>
     </div>`;
     return;
   }
 
-  const storyParts = S.story.split('\n\n').filter(Boolean);
+  // JOIN — code invoeren
+  if (S.screen === 'join') {
+    root.innerHTML = `<div class="wrap">
+      <div class="card">
+        <div class="icon">🤝</div>
+        <h2>Deelnemen</h2>
+        <p>Voer de sessiecode in die je van de gastheer kreeg.</p>
+        <input class="tin code" placeholder="CODE" value="${esc(S.joinCode)}" oninput="S.joinCode=this.value.toUpperCase()" maxlength="6" autocapitalize="characters"/>
+        ${S.joinError?`<div class="err" style="margin-bottom:12px">${esc(S.joinError)}</div>`:''}
+        <button class="btn bp" style="width:100%;margin-bottom:8px" ${S.loading?'disabled':''} onclick="joinSession()">${S.loading?'Zoeken…':'🚪 Deelnemen'}</button>
+        <button class="reset" onclick="set({screen:'home'})">← Terug</button>
+      </div>
+    </div>`;
+    return;
+  }
+
+  // PICK — kies je personage
+  if (S.screen === 'pick') {
+    root.innerHTML = `<div class="wrap">
+      <div class="code-banner">
+        <div><div class="cb-lbl">Sessie</div><div class="cb-code">${esc(S.sessionCode)}</div></div>
+        <button class="cpy" onclick="copyCode()">📋 Kopieer</button>
+      </div>
+      <div class="card">
+        <div class="icon">🧙</div>
+        <h2>Kies je personage</h2>
+        <p>Selecteer een vrij personage om mee te spelen.</p>
+        ${S.error?`<div class="err" style="margin-bottom:12px">${esc(S.error)}</div>`:''}
+        ${S.characters.length?`<div class="chars ${gcols(S.characters.length)}" style="padding:0">
+          ${S.characters.map((c,i)=>{ const owner=ownerOf(i); const taken=owner&&i!==S.myCharIndex;
+            return `<div onclick="${taken?'':`claimChar(${i})`}" style="cursor:${taken?'not-allowed':'pointer'};${taken?'opacity:.45;filter:grayscale(.5)':''}">${charCard(c,i)}</div>`;
+          }).join('')}
+        </div>`:`<div class="empty">De gastheer start het avontuur…</div>`}
+        <button class="reset" style="margin-top:14px" onclick="leaveSession()">← Verlaten</button>
+      </div>
+    </div>`;
+    return;
+  }
+
+  // GAME
+  const live = S.streaming ? (S.story ? S.story + '\n\n' + S.streamText : S.streamText) : S.story;
+  const storyParts = (live || '').split('\n\n').filter(Boolean);
+  const myName = myCharName();
 
   root.innerHTML = `<div class="wrap">
 
+    <!-- Sessiecode + spelers -->
+    <div class="code-banner">
+      <div><div class="cb-lbl">Sessiecode · deel met vrienden</div><div class="cb-code">${esc(S.sessionCode)}</div></div>
+      <button class="cpy" onclick="copyCode()">📋 Kopieer</button>
+    </div>
+    ${S.players.length?`<div class="players-row">
+      ${S.players.map(p=>{ const c=S.characters[p.charIndex]; const nm=c?c.name:(p.name||'?');
+        return `<span class="pchip${p.id===S.playerId?' me':''}">${esc(nm)}${p.id===S.playerId?' (jij)':''}</span>`; }).join('')}
+    </div>`:''}
+
     <!-- Verhaal -->
     <div class="panel">
-      <div class="phdr">📜 Het Verhaal</div>
+      <div class="phdr"><span>📜 Het Verhaal</span>${myName?`<span style="opacity:.7">Jij: ${esc(myName)}</span>`:''}</div>
       <div class="story" id="storyEl">
-        ${storyParts.length
-          ? storyParts.map(p=>`<p>${p}</p>`).join('')
-          : '<div class="empty">Het avontuur wacht…</div>'}
-        ${S.loading?'<div class="dots"><span></span><span></span><span></span></div>':''}
+        ${storyParts.length ? storyParts.map(p=>`<p>${esc(p)}</p>`).join('') : '<div class="empty">Het avontuur wacht…</div>'}
+        ${(S.loading&&!S.streaming)?'<div class="dots"><span></span><span></span><span></span></div>':''}
       </div>
       <div class="tts-bar">
         ${S.speaking
@@ -598,8 +778,8 @@ function draw() {
         <div class="tts-btns">
           ${S.speaking
             ?`<button class="tbtn stop" onclick="stopAudio()">■ Stop</button>`
-            :(S.pendingBuf||S.lastStory)?`<button class="tbtn" style="background:rgba(40,100,40,.2);border:1px solid rgba(80,160,40,.4);color:#90ee90" onclick="speakNow()">${S.pendingBuf?'▶ Voorlees 🎵':'▶ Voorlees'}</button>`:''}
-          <button class="tbtn mute" onclick="S.ttsOn=!S.ttsOn;stopAudio()">${S.ttsOn?'Uit':'Aan'}</button>
+            :(S.lastStory)?`<button class="tbtn" style="background:rgba(40,100,40,.2);border:1px solid rgba(80,160,40,.4);color:#90ee90" onclick="speakNow()">▶ Voorlees</button>`:''}
+          <button class="tbtn mute" onclick="set({ttsOn:!S.ttsOn});stopAudio()">${S.ttsOn?'Uit':'Aan'}</button>
         </div>
       </div>
     </div>
@@ -607,15 +787,15 @@ function draw() {
     <!-- Karakters -->
     ${S.characters.length?`
     <div class="panel">
-      <div class="phdr">⚔ Avonturiers</div>
+      <div class="phdr"><span>⚔ Avonturiers</span></div>
       <div class="chars ${gcols(S.characters.length)}">
-        ${S.characters.map(c=>charCard(c)).join('')}
+        ${S.characters.map((c,i)=>charCard(c,i)).join('')}
       </div>
     </div>`:''}
 
     <!-- Dobbelstenen -->
     <div class="dice-panel">
-      <div class="phdr">🎲 Dobbelstenen</div>
+      <div class="phdr"><span>🎲 Dobbelstenen</span></div>
       <div class="dice-row">
         ${DICE.map(d=>`<button class="die" ontouchstart="event.preventDefault();rollDie(${d})" onclick="rollDie(${d})">
           <span class="de">⬡</span><span>d${d}</span>
@@ -626,7 +806,7 @@ function draw() {
           ?`<div class="dice-num" style="animation:none;opacity:.5">…</div>`
           :S.diceResult
             ?`<div class="dice-num">${S.diceResult.value}</div>
-              <div class="dice-desc">d${S.diceResult.die} — ${getDiceLabel(S.diceResult.die, S.diceResult.value)}</div>`
+              <div class="dice-desc">d${S.diceResult.die} — ${getDiceLabel(S.diceResult.die, S.diceResult.value)}${S.diceBy?` · ${esc(S.diceBy)}`:''}</div>`
             :`<div style="font-size:10px;color:var(--ink2);opacity:.5;font-style:italic">Tik een dobbelsteen om te gooien</div>`}
       </div>
     </div>
@@ -649,7 +829,7 @@ function draw() {
     ${S.pendingAction||S.listening?`
     <div class="tx-box">
       <div class="tx-label">${S.listening?'🎙 Aan het luisteren…':'✓ Gehoord — klopt dit?'}</div>
-      <div class="tx-text">${S.transcript||S.pendingAction||'…'}</div>
+      <div class="tx-text">${esc(S.transcript||S.pendingAction)||'…'}</div>
       ${S.pendingAction&&!S.listening?`
       <div class="tx-btns">
         <button class="tx-btn tx-send" onclick="sendAction(S.pendingAction)">✓ Verstuur</button>
@@ -657,9 +837,9 @@ function draw() {
       </div>`:''}
     </div>`:''}
 
-    ${S.error?`<div class="err">${S.error}</div>`:''}
-    ${S.debugLog?.length?`<div style="background:rgba(0,0,0,.8);border:1px solid #555;border-radius:4px;padding:8px;font-size:9px;font-family:monospace;color:#0f0;max-height:100px;overflow-y:auto">${S.debugLog.map(l=>`<div>${l}</div>`).join('')}</div>`:''}
-    <button class="reset" onclick="set({screen:'setup',story:'',messages:[],characters:[],error:'',transcript:'',pendingAction:'',diceResult:null})">✕ Nieuw Avontuur</button>
+    ${S.error?`<div class="err">${esc(S.error)}</div>`:''}
+    ${S.debugLog?.length?`<div style="background:rgba(0,0,0,.8);border:1px solid #555;border-radius:4px;padding:8px;font-size:9px;font-family:monospace;color:#0f0;max-height:100px;overflow-y:auto">${S.debugLog.map(l=>`<div>${esc(l)}</div>`).join('')}</div>`:''}
+    <button class="reset" onclick="leaveSession()">✕ Verlaat sessie</button>
   </div>`;
 
   const el = document.getElementById('storyEl');
@@ -678,13 +858,8 @@ function getDiceLabel(die, val) {
   return `${val} van de ${die}`;
 }
 
-function pttDown() {
-  if (S.loading || S.listening) return;
-  startListen();
-}
-function pttUp() {
-  if (S.listening) stopListen();
-}
+function pttDown() { if (S.loading || S.listening) return; startListen(); }
+function pttUp() { if (S.listening) stopListen(); }
 
 draw();
 </script>
