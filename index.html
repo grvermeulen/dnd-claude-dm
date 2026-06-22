@@ -359,6 +359,7 @@ function rollDie(sides) {
   playDiceSound();
   setTimeout(async () => {
     const val = Math.floor(Math.random() * sides) + 1;
+    _pendingRoll = { die: sides, value: val };   // wordt bij je volgende actie aan de DM doorgegeven
     set({ diceRolling: false, diceResult: { die: sides, value: val }, diceBy: myCharName() || (S.playerName||'Jij') });
     if (S.sessionCode) { try { await dbUpdate({ dice: { die: sides, value: val, by: myCharName() || (S.playerName||'Speler'), ts: Date.now() } }); } catch(e){} }
   }, 600);
@@ -422,6 +423,7 @@ const SYSTEM_NL = `Je bent een meeslepende Dungeon Master voor een klassiek fant
 - Levendige maar beknopte beschrijvingen (3-5 zinnen per beurt).
 - Genereer en beheer ALLE personages volledig zelf bij de start (naam, klasse, ras, stats). Vraag spelers NOOIT om hun naam, klasse of ras op te geven.
 - Meerdere spelers kunnen meedoen. Een spelersbericht kan beginnen met de naam van het handelende personage tussen haken, bv. "[Thorin] valt de ork aan". Richt je antwoord op het juiste personage.
+- DOBBELSTENEN: rol NOOIT zelf en verzin NOOIT zelf de uitkomst van een worp. Bij gevechten, aanvallen, reddingsworpen en vaardigheidstesten vraag je de betreffende speler expliciet om te gooien (bv. "Borin, gooi een d20 voor je aanval") en wacht je op het resultaat. De speler geeft de worp door (bv. "(ik gooide een d20 en kreeg 14)"); gebruik DAT getal om de uitkomst te bepalen.
 - Geef in ELKE reactie ALTIJD het volledige JSON-blok met ALLE personages terug (ook de personages die deze beurt niet handelden); laat er nooit één weg.
 - Na ELKE reactie een JSON-blok met alle karakters:
 \`\`\`json
@@ -473,6 +475,7 @@ function myCharName() { const c = S.characters[S.myCharIndex]; return c ? c.name
 // ── Supabase sessie-helpers ──────────────────────────────────────────────────
 let _channel = null;
 let _syncedStory = '';   // laatst gehoorde verhaal (om dubbel voorlezen te voorkomen)
+let _pendingRoll = null; // eigen, nog niet doorgegeven dobbelsteenworp (wordt bij de volgende actie meegestuurd)
 
 function genCode() {
   const a = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
@@ -613,7 +616,8 @@ async function sendAction(text) {
   if (!text.trim() || S.loading) return;
   set({ transcript: '', pendingAction: '' });
   const who = myCharName();
-  const content = who ? `[${who}] ${text}` : text;
+  let content = who ? `[${who}] ${text}` : text;
+  if (_pendingRoll) { content += ` (ik gooide een d${_pendingRoll.die} en kreeg ${_pendingRoll.value})`; _pendingRoll = null; }
   await runDM([...S.messages, { role: 'user', content }], { append: true });
 }
 

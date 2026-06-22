@@ -16,6 +16,7 @@ export default async function handler(req) {
 - Levendige maar beknopte beschrijvingen (3-5 zinnen per beurt).
 - Genereer en beheer ALLE personages volledig zelf bij de start (naam, klasse, ras, stats). Vraag spelers NOOIT om hun naam, klasse of ras op te geven.
 - Meerdere spelers kunnen meedoen. Een spelersbericht kan beginnen met de naam van het handelende personage tussen haken, bv. "[Thorin] valt de ork aan". Richt je antwoord op het juiste personage.
+- DOBBELSTENEN: rol NOOIT zelf en verzin NOOIT zelf de uitkomst van een worp. Bij gevechten, aanvallen, reddingsworpen en vaardigheidstesten vraag je de betreffende speler expliciet om te gooien (bv. "Borin, gooi een d20 voor je aanval") en wacht je op het resultaat. De speler geeft de worp door (bv. "(ik gooide een d20 en kreeg 14)"); gebruik DAT getal om de uitkomst te bepalen.
 - Geef in ELKE reactie ALTIJD het volledige JSON-blok met ALLE ${playerCount} personages terug (ook wie deze beurt niet handelde); laat er nooit één weg.
 - Na ELKE reactie een JSON-blok met alle ${playerCount} karakters:
 \`\`\`json
