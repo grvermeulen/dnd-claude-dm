@@ -485,7 +485,7 @@ function genCode() {
 }
 
 async function dbUpdate(patch) {
-  const { error } = await sb().from('sessions').update(patch).eq('code', S.sessionCode);
+  const { error } = await sb().from('DungeonsDragons_sessions').update(patch).eq('code', S.sessionCode);
   if (error) dlog('DB update fout: ' + error.message);
 }
 
@@ -511,7 +511,7 @@ function subscribe(code) {
   unsubscribe();
   _channel = sb()
     .channel('session:' + code)
-    .on('postgres_changes', { event: '*', schema: 'public', table: 'sessions', filter: 'code=eq.' + code }, payload => {
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'DungeonsDragons_sessions', filter: 'code=eq.' + code }, payload => {
       applyRow(payload.new, true);
     })
     .subscribe();
@@ -531,7 +531,7 @@ async function createSession() {
   set({ loading: true, error: '' });
   const code = genCode();
   try {
-    const { error } = await sb().from('sessions').insert({ code, player_count: S.numPlayers, voice_id: S.voiceId });
+    const { error } = await sb().from('DungeonsDragons_sessions').insert({ code, player_count: S.numPlayers, voice_id: S.voiceId });
     if (error) throw error;
     localStorage.setItem('dnd_lastSession', code);
     _syncedStory = '';
@@ -548,7 +548,7 @@ async function joinSession() {
   if (S.playerName) localStorage.setItem('dnd_playerName', S.playerName);
   set({ loading: true, joinError: '' });
   try {
-    const { data, error } = await sb().from('sessions').select('*').eq('code', code).maybeSingle();
+    const { data, error } = await sb().from('DungeonsDragons_sessions').select('*').eq('code', code).maybeSingle();
     if (error) throw error;
     if (!data) { set({ loading: false, joinError: 'Sessie niet gevonden' }); return; }
     localStorage.setItem('dnd_lastSession', code);
@@ -573,12 +573,12 @@ function resumeLast() {
 // Kies een (nog vrij) personage
 async function claimChar(idx) {
   try {
-    const { data } = await sb().from('sessions').select('players').eq('code', S.sessionCode).maybeSingle();
+    const { data } = await sb().from('DungeonsDragons_sessions').select('players').eq('code', S.sessionCode).maybeSingle();
     const players = (data && data.players) || [];
     if (players.find(p => p.charIndex === idx && p.id !== S.playerId)) { set({ error: 'Dat personage is al gekozen' }); return; }
     const others = players.filter(p => p.id !== S.playerId);
     const np = [...others, { id: S.playerId, name: S.playerName || 'Speler', charIndex: idx }];
-    await sb().from('sessions').update({ players: np }).eq('code', S.sessionCode);
+    await sb().from('DungeonsDragons_sessions').update({ players: np }).eq('code', S.sessionCode);
     set({ myCharIndex: idx, screen: 'game', error: '' });
   } catch(e) { set({ error: 'Fout: ' + e.message }); }
 }

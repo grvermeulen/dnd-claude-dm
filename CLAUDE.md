@@ -13,13 +13,13 @@ There is **no build step and no `package.json`**. The frontend is a single file 
 - `index.html` — the entire frontend: HTML, CSS, and vanilla JS in one file (~900 lines).
 - `api/dm.js` — Vercel Edge Function proxying to the Anthropic Messages API (`claude-sonnet-4-6`). **Streams** SSE straight through to the browser (`stream: true`) for low latency; also supports a non-streaming JSON mode.
 - `api/tts.js` — Vercel Edge Function proxying to the ElevenLabs TTS API (`eleven_multilingual_v2`).
-- **Supabase** (project `dnd-claude-dm`, ref `qgjzixblvohjggcwdaou`) — Postgres + Realtime backing the multiplayer `sessions` table. Schema lives only as an applied migration (`create_sessions`), not in the repo.
+- **Supabase** (project `dnd-claude-dm`, ref `qgjzixblvohjggcwdaou`) — Postgres + Realtime backing the multiplayer `DungeonsDragons_sessions` table. The DB is shared with other games, so this app's tables are prefixed `DungeonsDragons_` (a quoted mixed-case identifier; reference it verbatim, case-sensitive). Schema lives only as applied migrations, not in the repo.
 
 The API functions exist primarily to keep `ANTHROPIC_API_KEY` and `ELEVENLABS_API_KEY` server-side; the browser never sees the keys. Both are `runtime: "edge"` and handle CORS preflight manually. The Supabase URL + **publishable** key are embedded in `index.html` — that is intentional and safe because access is gated by Row Level Security.
 
 ### Multiplayer / sessions (Supabase)
 
-- A single `sessions` table is the shared state: `code` (PK, the join/save code), `messages` (Claude history), `characters`, `players` (`[{id,name,charIndex}]`), `story`, `last_story` (most recent chunk, for TTS), `dice`, `loading`. RLS allows `anon` full read/write — the session code is the de-facto secret (acceptable for a casual game; tighten if this ever holds anything sensitive).
+- A single `DungeonsDragons_sessions` table is the shared state: `code` (PK, the join/save code), `messages` (Claude history), `characters`, `players` (`[{id,name,charIndex}]`), `story`, `last_story` (most recent chunk, for TTS), `dice`, `loading`. RLS allows `anon` full read/write — the session code is the de-facto secret (acceptable for a casual game; tighten if this ever holds anything sensitive).
 - Clients subscribe to `postgres_changes` filtered by `code`; `applyRow()` is the single funnel that merges a DB row into state `S` and triggers TTS for genuinely new `last_story` (guarded by the module-level `_syncedStory` so joins/echoes don't replay audio).
 - **Writes go to the DB, not directly to local state**, then the realtime echo updates everyone (including the writer). `runDM()` additionally sets the final story locally before the echo to avoid a flicker, but deliberately leaves `_syncedStory` unchanged so the echo still drives audio playback.
 - Each device has a stable `playerId` in `localStorage`; re-entering a known code resumes (re-claims your character) instead of re-picking. `dnd_lastSession` powers the "resume" button.
